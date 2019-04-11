@@ -67,10 +67,12 @@
 function startApplication( dom, body, ls ) {
 
     let application_el = dom.createElement( 'div' );
+    body.appendChild( application_el );
     application_el.id = 'application';
 
     
     let nav = dom.createElement( 'nav' );
+    application_el.appendChild( nav );
     nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark' );
 
     let html = '<a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>';
@@ -79,33 +81,26 @@ function startApplication( dom, body, ls ) {
     html    += '</button>';
     html    += '<div class="collapse navbar-collapse" id="navbarSupportedContent">';
     html    += '<ul class="navbar-nav mr-auto">';
-    html    += '<li class="nav-item active" v-for="link in nav.links">';
+    html    += '<li class="nav-item" v-for="link in nav.links">';
     html    += '<a class="nav-link disabled" :href="link.href" :onclick="link.func">{{ link.text }}</a>';
     html    += '</li>';
     html    += '</ul>';
     html    += '</div>';
-    html    += '';
-    html    += '';
-    html    += '';
-    html    += '';
-    html    += '';
-    html    += '';
     nav.innerHTML = html;
-    application_el.appendChild( nav );
-
-    body.appendChild( application_el );
 
     let container = dom.createElement( 'div' );
+    application_el.appendChild( container );
     container.id = 'main';
-    // container.classList.add( '' );
-    body.appendChild( container );
+    container.classList.add( 'container' );
+    container.style[ 'padding-top' ] = '25px';
+    container.style[ 'padding-bottom' ] = '25px';
+    container.setAttribute( 'v-html', 'init' );
 
     let application = new Vue( {
         el		: '#application',
         data 	: {
-            jumbotron_heading   : 'Привет, коллега, начнем?',
-            jumbotron_lead      : 'Так то лучше..',
-            nav                 : {
+            init   : '<div class="text-center">Загрузка...</div>',
+            nav    : {
                 links : [
                     {
                         href: '#',
