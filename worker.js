@@ -70,7 +70,6 @@ function startApplication( dom, body, ls ) {
     body.appendChild( application_el );
     application_el.id = 'application';
 
-    
     let nav = dom.createElement( 'nav' );
     application_el.appendChild( nav );
     nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark' );
@@ -121,4 +120,5 @@ function startApplication( dom, body, ls ) {
             }
         }
     } );
+    
 }
