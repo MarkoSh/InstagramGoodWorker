@@ -16,13 +16,30 @@
     
     body.innerHTML = '';
 
-    let link = dom.createElement( 'link' );
-    link.setAttribute( 'rel', 'stylesheet' );
-    link.setAttribute( 'href', '//stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css' );
-    link.setAttribute( 'integrity', 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO' );
-    link.setAttribute( 'crossorigin', 'anonymous' );
+    let styles = [
+        {
+            href        : '//stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+            integrity   : 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO',
+            crossorigin : 'anonymous'
+        }, {
+            href        : '//fonts.googleapis.com/icon?family=Material+Icons'
+        }, {
+            href        : '//use.fontawesome.com/releases/v5.8.1/css/all.css',
+            integrity   : 'sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf',
+            crossorigin : 'anonymous'
+        }, {
+            href        : '//cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css'
+        }
+    ];
 
-    dom.head.appendChild( link );
+    styles.forEach( style => {
+        let link = dom.createElement( 'link' );
+        Object.keys( style ).forEach( key => {
+            link.setAttribute( key, style[ key ] );
+        } );
+        link.setAttribute( 'rel', 'stylesheet' );    
+        dom.head.appendChild( link );
+    } );    
 
     let scripts = [ {
         src			: '//code.jquery.com/jquery-3.3.1.slim.min.js',
@@ -33,6 +50,8 @@
     }, {
         src			: '//stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js',
         integrity	: 'sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy'
+    }, {
+        src         : '//cdn.jsdelivr.net/npm/vanilla-lazyload@11.0.6/dist/lazyload.min.js'
     }, {
         src			: '//cdn.jsdelivr.net/npm/vue/dist/vue.js',
     } ];
@@ -74,23 +93,25 @@ function startApplication( dom, body, ls ) {
     application_el.appendChild( nav );
     nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark' );
 
-    let html = '<a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>';
-    html    += '<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">';
-    html    += '<span class="navbar-toggler-icon"></span>';
-    html    += '</button>';
-    html    += '<div class="collapse navbar-collapse" id="navbarSupportedContent">';
-    html    += '<ul class="navbar-nav mr-auto">';
-    html    += '<li class="nav-item" v-for="link in nav.links">';
-    html    += '<a class="nav-link disabled" :href="link.href" :onclick="link.func">{{ link.text }}</a>';
-    html    += '</li>';
-    html    += '</ul>';
-    html    += '</div>';
+    let html = `
+    <a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item" v-for="link in nav.links">
+                <a class="nav-link" :href="link.href" :onclick="link.func">{{ link.text }}</a>
+            </li>
+        </ul>
+    </div>
+    `;
     nav.innerHTML = html;
 
     let container = dom.createElement( 'div' );
     application_el.appendChild( container );
     container.id = 'main';
-    container.classList.add( 'container' );
+    container.classList.add( 'container-fluid' );
     container.style[ 'padding-top' ] = '25px';
     container.style[ 'padding-bottom' ] = '25px';
     container.setAttribute( 'v-html', 'init' );
@@ -98,7 +119,11 @@ function startApplication( dom, body, ls ) {
     let application = new Vue( {
         el		: '#application',
         data 	: {
-            init   : '<div class="text-center">Загрузка...</div>',
+            init   : `
+            <div class="text-center">
+                <i class="material-icons animated infinite rotateIn">autorenew</i>
+            </div>
+            `,
             nav    : {
                 links : [
                     {
@@ -118,7 +143,54 @@ function startApplication( dom, body, ls ) {
                     }
                 ]
             }
+        },
+        methods : {
+            greet: () => {
+                alert( 123 );
+            }
         }
     } );
+
+    let igs = ls.getItem( 'igs' );
     
+    if ( igs ) {
+        let row = dom.createElement( 'div' );
+        row.classList.add( 'row' );
+        let col = dom.createElement( 'div' ); row.appendChild( col );
+        col.classList.add( 'col' );
+        col.style[ 'padding-top' ] = '15px';
+        col.style[ 'padding-bottom' ] = '15px';
+        let card = dom.createElement( 'div' ); col.appendChild( card );
+        card.classList.add( 'card' );
+        let img = dom.createElement( 'img' ); card.appendChild( img );
+        img.classList.add( 'card-img-top' );
+        img.setAttribute( 'data-src', '//via.placeholder.com/300' );
+        img.alt = "...";
+        let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
+        card_body.classList.add( 'card-body' );
+        let card_title = dom.createElement( 'h5' ); card_body.appendChild( card_title );
+        card_title.classList.add( 'card-title' );
+        card_title.innerText = 'asdasd';
+        let card_text = dom.createElement( 'p' ); card_body.appendChild( card_text );
+        card_text.classList.add( 'card-text' );
+        card_text.innerText = 'dfgdfgdfg';
+        application.init = row.outerHTML;
+    
+        Vue.nextTick( () => {
+            let ll = new LazyLoad( {
+                elements_selector: "img.card-img-top"
+                // ... more custom settings?
+            } );
+        } ); 
+
+    } else {
+        application.init = `
+        <div class="alert alert-warning" role="alert">
+            База аккаунтов пуста, добавьте несколько аккаунтов для работы
+            <button type="button" class="btn btn-outline-dark">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+        `;
+    }
 }
