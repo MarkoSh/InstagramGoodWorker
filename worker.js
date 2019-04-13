@@ -146,12 +146,13 @@ function startApplication( dom, body, ls ) {
     container.style[ 'padding-bottom' ] = '15px';
     container.innerHTML      = `
     <div class="row" v-if="igs">
-        <card v-for="card in cards" 
+        <card v-for="card in cards" :key="card.id"
 
         v-bind:full_name="card.full_name" 
         v-bind:profile_pic_url="card.profile_pic_url" 
         v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
         v-bind:biography="card.biography"
+        v-bind:id="card.id"
 
         ></card>
     </div>
@@ -190,15 +191,27 @@ function startApplication( dom, body, ls ) {
     let card_text = dom.createElement( 'p' ); card_body.appendChild( card_text );
     card_text.classList.add( 'card-text' );
     card_text.setAttribute( 'v-html', 'biography' );
+    let card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerText = 'Удалить';
+    card_link.setAttribute( 'href', '#' );
+    card_link.setAttribute( ':data-id', 'id' );
+    card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
 
     Vue.component( 'card', {
         props   : [
             'profile_pic_url_hd',
             'profile_pic_url',
             'full_name',
-            'biography'
+            'biography',
+            'id'
         ],
-        template: col.outerHTML
+        template: col.outerHTML,
+        methods: {
+            removeIg: e => {
+                application.removeIg( e.target.getAttribute( 'data-id' ) );
+            }
+        }
     } );
 
     let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
@@ -208,10 +221,10 @@ function startApplication( dom, body, ls ) {
         el		: '#application',
         data 	: {
             igs     : igs,
-            cards   : igs.map( ig => {
+            cards   : igs ? igs.map( ig => {
                 ig.biography = ig.biography.replace( /([^>])\n/g, "$1<br/>" );
                 return ig;
-            } ),
+            } ) : [],
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
             },
@@ -233,6 +246,15 @@ function startApplication( dom, body, ls ) {
                         func: 'javascript:hashtagerFunc()'
                     }
                 ]
+            }
+        },
+        methods : {
+            removeIg: id => {
+                igs = igs.filter( ig_ => {
+                    return ig_.id != id;
+                } );
+                application.cards = igs;
+                ls.setItem( 'igs', JSON.stringify( igs ) );
             }
         }
     } );
