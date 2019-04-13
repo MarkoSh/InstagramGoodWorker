@@ -95,10 +95,14 @@
                 button.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
                 button.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px; width: 30px; height: 30px;' );
                 body.appendChild( button );
-                button.innerHTML = igs.indexOf( ig ) > -1 ? '-' : '+';
+                button.innerHTML = igs.find( ig_ => {
+                    return ig_.id == ig.id;
+                } ) ? '-' : '+';
                 button.onclick = e => {
                     button.remove();
-                    if ( igs.indexOf( ig ) > -1 ) {
+                    if ( igs.find( ig_ => {
+                        return ig_.id == ig.id;
+                    } ) ) {
                         igs = igs.filter( ig_ => {
                             return ig_ != ig;
                         } );
@@ -179,6 +183,7 @@ function startApplication( dom, body, ls ) {
     let card = dom.createElement( 'div' );
     col.appendChild( card );
     card.classList.add( 'card' );
+    card.classList.add( 'shadow' );
     let img = dom.createElement( 'img' ); card.appendChild( img );
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
