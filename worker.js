@@ -82,11 +82,50 @@
         window.addEventListener( 'startApplication', () => {
             startApplication( dom, body, ls );
         } );
+    } else {
+        let ig = window.location.pathname.replace( /\//g, '' );
+        let igs = ls.getItem( 'igs' );
+        if ( igs ) {
+            igs = JSON.parse( igs );
+            if ( igs.indexOf( ig ) < 0 ) {
+                displayAddBtn();
+            } else {
+                displayRemoveBtn();
+            }
+        } else displayAddBtn();
     }
 
-    
-
 } )( document, document.body, localStorage );
+
+function displayAddBtn() {
+    setTimeout( () => {
+        let defaultBtn = document.querySelector( 'button' );
+        if ( defaultBtn ) {
+            let add = document.createElement( 'button' );
+            add.innerHTML = '+';
+            add.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
+            document.body.appendChild( add );
+            add.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px;' );
+        } else {
+            displayAddBtn();
+        }
+    }, 500 );    
+}
+
+function displayRemoveBtn() {
+    setTimeout( () => {
+        let defaultBtn = document.querySelector( 'button' );
+        if ( defaultBtn ) {
+            let remove = document.createElement( 'button' );
+            remove.innerHTML = '-';
+            remove.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
+            document.body.appendChild( remove );
+            remove.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px;' );
+        } else {
+            displayRemoveBtn();
+        }
+    }, 500 );
+}
 
 function startApplication( dom, body, ls ) {
 
