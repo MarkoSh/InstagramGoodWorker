@@ -153,6 +153,7 @@ function startApplication( dom, body, ls ) {
         v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
         v-bind:biography="card.biography"
         v-bind:id="card.id"
+        v-bind:url="card.url"
 
         ></card>
     </div>
@@ -198,13 +199,20 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( ':data-id', 'id' );
     card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
 
+    card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerText = 'Перейти';
+    card_link.setAttribute( ':href', 'url' );
+    card_link.setAttribute( 'target', '_blank' );
+
     Vue.component( 'card', {
         props   : [
             'profile_pic_url_hd',
             'profile_pic_url',
             'full_name',
             'biography',
-            'id'
+            'id',
+            'url'
         ],
         template: col.outerHTML,
         methods: {
@@ -222,7 +230,8 @@ function startApplication( dom, body, ls ) {
         data 	: {
             igs     : igs,
             cards   : igs ? igs.map( ig => {
-                ig.biography = ig.biography.replace( /([^>])\n/g, "$1<br/>" );
+                ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
+                ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br/>" );
                 return ig;
             } ) : [],
             alert   : {
