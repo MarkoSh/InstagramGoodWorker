@@ -8,7 +8,7 @@
 // @grant        none
 // ==/UserScript==
 
-( function( dom, body, ls) {
+( function( sd, dom, body, ls) {
     'use strict';
 
     if ( 'https://www.instagram.com/about/us/' == window.location.href ) {
@@ -83,49 +83,35 @@
             startApplication( dom, body, ls );
         } );
     } else {
-        let ig = window.location.pathname.replace( /\//g, '' );
-        let igs = ls.getItem( 'igs' );
-        if ( igs ) {
-            igs = JSON.parse( igs );
-            if ( igs.indexOf( ig ) < 0 ) {
-                displayAddBtn();
+        if ( ! sd.entry_data.ProfilePage ) return true;
+        let ig = sd.entry_data.ProfilePage[ 0 ].graphql.user;
+        let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : [];
+        let checkLoaded = () => {
+            let defaultBtn = document.querySelector( 'button' );
+            if ( ! defaultBtn ) {
+                setTimeout( checkLoaded, 500 );
             } else {
-                displayRemoveBtn();
+                let button = dom.createElement( 'button' );
+                button.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
+                button.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px; width: 30px; height: 30px;' );
+                body.appendChild( button );
+                button.innerHTML = igs.indexOf( ig ) > -1 ? '-' : '+';
+                button.onclick = e => {
+                    button.remove();
+                    if ( igs.indexOf( ig ) > -1 ) {
+                        igs = igs.filter( ig_ => {
+                            return ig_ != ig;
+                        } );
+                    } else igs.push( ig );
+                    ls.setItem( 'igs', JSON.stringify( igs ) );
+                    checkLoaded();
+                };
             }
-        } else displayAddBtn();
+        };
+        checkLoaded();
     }
 
-} )( document, document.body, localStorage );
-
-function displayAddBtn() {
-    setTimeout( () => {
-        let defaultBtn = document.querySelector( 'button' );
-        if ( defaultBtn ) {
-            let add = document.createElement( 'button' );
-            add.innerHTML = '+';
-            add.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
-            document.body.appendChild( add );
-            add.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px;' );
-        } else {
-            displayAddBtn();
-        }
-    }, 500 );    
-}
-
-function displayRemoveBtn() {
-    setTimeout( () => {
-        let defaultBtn = document.querySelector( 'button' );
-        if ( defaultBtn ) {
-            let remove = document.createElement( 'button' );
-            remove.innerHTML = '-';
-            remove.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
-            document.body.appendChild( remove );
-            remove.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px;' );
-        } else {
-            displayRemoveBtn();
-        }
-    }, 500 );
-}
+} )( window._sharedData, document, document.body, localStorage );
 
 function startApplication( dom, body, ls ) {
 
@@ -158,7 +144,18 @@ function startApplication( dom, body, ls ) {
     container.classList.add( 'container-fluid' );
     container.style[ 'padding-top' ] = '15px';
     container.style[ 'padding-bottom' ] = '15px';
-    container.innerHTML      = '<div class="row" v-if="igs"><card v-for="card in cards" v-bind:title="card.title" v-bind:src="card.src" v-bind:text="card.text"></card></div>';
+    container.innerHTML      = `
+    <div class="row" v-if="igs">
+        <card v-for="card in cards" 
+
+        v-bind:full_name="card.full_name" 
+        v-bind:profile_pic_url="card.profile_pic_url" 
+        v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
+        v-bind:biography="card.biography"
+
+        ></card>
+    </div>
+    `;
     container.innerHTML     += '<alert v-if="! igs" v-bind:message="alert.message"></alert>';
 
     let alert = dom.createElement( 'div' );
@@ -182,39 +179,39 @@ function startApplication( dom, body, ls ) {
     card.classList.add( 'card' );
     let img = dom.createElement( 'img' ); card.appendChild( img );
     img.classList.add( 'card-img-top' );
-    img.setAttribute( ':data-src', 'src' );
-    img.src = '//via.placeholder.com/300'
+    img.setAttribute( ':data-src', 'profile_pic_url_hd' );
+    img.setAttribute( ':src', 'profile_pic_url' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
     card_body.classList.add( 'card-body' );
     let card_title = dom.createElement( 'h5' ); card_body.appendChild( card_title );
     card_title.classList.add( 'card-title' );
-    card_title.innerText = '{{ title }}';
+    card_title.innerHTML = '{{ full_name }}';
     let card_text = dom.createElement( 'p' ); card_body.appendChild( card_text );
     card_text.classList.add( 'card-text' );
-    card_text.innerText = '{{ text }}';
+    card_text.setAttribute( 'v-html', 'biography' );
 
     Vue.component( 'card', {
         props   : [
-            'src', 'title', 'text'
+            'profile_pic_url_hd',
+            'profile_pic_url',
+            'full_name',
+            'biography'
         ],
         template: col.outerHTML
     } );
 
+    let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
+    igs = igs && igs.length > 0 ? igs : false;
+
     let application = new Vue( {
         el		: '#application',
         data 	: {
-            igs     : ls.getItem( 'igs' ),
-            cards   : ( () => {
-                let cards = [];
-                for ( let i = 0; i < 100; i++ ) {
-                    cards.push( {
-                        title: 'Тест',
-                        src: '//via.placeholder.com/500'
-                    } );
-                }
-                return cards;
-            } )(),
+            igs     : igs,
+            cards   : igs.map( ig => {
+                ig.biography = ig.biography.replace( /([^>])\n/g, "$1<br/>" );
+                return ig;
+            } ),
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
             },
