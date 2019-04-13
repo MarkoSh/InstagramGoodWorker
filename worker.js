@@ -104,7 +104,7 @@
                         return ig_.id == ig.id;
                     } ) ) {
                         igs = igs.filter( ig_ => {
-                            return ig_ != ig;
+                            return ig_.id != ig.id;
                         } );
                     } else igs.push( ig );
                     ls.setItem( 'igs', JSON.stringify( igs ) );
