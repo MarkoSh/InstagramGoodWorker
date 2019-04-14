@@ -158,6 +158,7 @@ function startApplication( dom, body, ls ) {
         v-bind:biography="card.biography"
         v-bind:id="card.id"
         v-bind:url="card.url"
+        v-bind:selected="card.selected"
 
         ></card>
     </div>
@@ -199,16 +200,22 @@ function startApplication( dom, body, ls ) {
     card_text.setAttribute( 'v-html', 'biography' );
     let card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerText = 'Удалить';
+    card_link.innerHTML = '<i class="fas fa-user-minus"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( ':data-id', 'id' );
-    card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
+    card_link.setAttribute( 'v-on:click.prevent', 'removeIg( id )' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerText = 'Перейти';
+    card_link.innerHTML = '<i class="fas fa-link"></i>';
     card_link.setAttribute( ':href', 'url' );
     card_link.setAttribute( 'target', '_blank' );
+
+    card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerHTML      = '<i v-if="selected" class="far fa-check-square"></i>';
+    card_link.innerHTML     += '<i v-if="! selected" class="far fa-square"></i>';
+    card_link.setAttribute( 'href', '#' );
+    card_link.setAttribute( 'v-on:click.prevent', 'checkIg( id )' );
 
     Vue.component( 'card', {
         props   : [
@@ -217,12 +224,31 @@ function startApplication( dom, body, ls ) {
             'full_name',
             'biography',
             'id',
-            'url'
+            'url',
+            'selected'
         ],
         template: col.outerHTML,
         methods: {
-            removeIg: e => {
-                application.removeIg( e.target.getAttribute( 'data-id' ) );
+            removeIg: id => {
+                let igs = application.igs;
+                igs = igs.filter( ig => {
+                    return ig.id != id;
+                } );
+                application.cards = igs;
+                ls.setItem( 'igs', JSON.stringify( igs ) );
+            },
+            checkIg: id => {
+                let igs = application.igs;
+                igs = igs.map( ig => {
+                    if ( ig.id == id && ! ig.selected ) {
+                        ig[ 'selected' ] = true;
+                    } else if ( ig.id == id && ig.selected ) {
+                        ig[ 'selected' ] = false;
+                    }
+                    
+                    return ig;
+                } );
+                application.cards = igs;
             }
         }
     } );
@@ -260,15 +286,6 @@ function startApplication( dom, body, ls ) {
                         func: 'javascript:hashtagerFunc()'
                     }
                 ]
-            }
-        },
-        methods : {
-            removeIg: id => {
-                igs = igs.filter( ig_ => {
-                    return ig_.id != id;
-                } );
-                application.cards = igs;
-                ls.setItem( 'igs', JSON.stringify( igs ) );
             }
         }
     } );
