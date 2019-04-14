@@ -202,7 +202,7 @@ function startApplication( dom, body, ls ) {
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
     img.setAttribute( ':src', 'profile_pic_url' );
-    img.setAttribute( 'v-on:hover', 'getImagesFor( id )' );
+    img.setAttribute( 'v-on:mouseover', 'getImagesFor( id )' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
     card_body.classList.add( 'card-body' );
@@ -242,6 +242,9 @@ function startApplication( dom, body, ls ) {
             'selected'
         ],
         template: col.outerHTML,
+        data: {
+            t: false
+        },
         methods: {
             removeIg: id => {
                 let igs = application.cards;
@@ -263,8 +266,23 @@ function startApplication( dom, body, ls ) {
                 } );
                 application.cards = igs;
             },
-            getImagesFor: id => {
+            getImagesFor: function ( id ) {
+                clearInterval( this.t );
+                let igs = application.cards;
+                let ig = igs.find( ig => {
+                    return ig.id == id;
+                } );
+                let images = ig.images || {
+                    date: null,
+                    images: []
+                };
+                if ( images.images.length > 0 ) {
+                    this.t = setInterval( () => {
 
+                    }, 1000 );
+                } else {
+
+                }
             }
         }
     } );
