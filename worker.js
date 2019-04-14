@@ -281,7 +281,36 @@ function startApplication( dom, body, ls ) {
 
                     }, 1000 );
                 } else {
-
+                    let xhr = new XMLHttpRequest();
+                    xhr.open( 'GET', ig.url );
+                    xhr.onload = () => {
+                        let html = dom.createElement( 'div' );
+                        html.innerHTML = xhr.responseText;
+                        let scripts = html.querySelectorAll( 'script' );
+                        let script = Array.prototype.find.call( scripts, script => {
+                            return script.innerHTML.match( /^window\._sharedData/ );
+                        } );
+                        if ( script ) {
+                            script.innerHTML = script.innerHTML.replace( /_sharedData/, '_sharedData_' + id );
+                            eval( script.innerHTML );
+                        }
+                        let sd = window[ '_sharedData_' + id ];
+                        let media = sd.entry_data.ProfilePage[ 0 ].graphql.user.edge_owner_to_timeline_media;
+                        if ( media.count > 0 ) {
+                            let images = media.edges.map( edge => {
+                                return {
+                                    thumbnail_src   : edge.node.thumbnail_src,
+                                    display_url     : edge.node.display_url
+                                };
+                            } ).slice( 0, 3 );
+                            ig[ 'images' ] = {
+                                date    : ( new Date() ).getTime(),
+                                images  : images
+                            };
+                            ls.setItem( 'igs', JSON.stringify( igs ) );
+                        }
+                    };
+                    xhr.send();
                 }
             }
         }
@@ -296,7 +325,7 @@ function startApplication( dom, body, ls ) {
             igs     : igs,
             cards   : igs ? igs.map( ig => {
                 ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
-                ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br/>" );
+                ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
                 return ig;
             } ) : [],
             alert   : {
