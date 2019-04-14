@@ -31,6 +31,8 @@
                 crossorigin : 'anonymous'
             }, {
                 href        : '//cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css'
+            }, {
+                href        : '//cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/css/swiper.min.css'
             }
         ];
     
@@ -54,6 +56,8 @@
             integrity	: 'sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy'
         }, {
             src         : '//cdn.jsdelivr.net/npm/vanilla-lazyload@11.0.6/dist/lazyload.min.js'
+        }, {
+            src         : '//cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js'
         }, {
             src			: '//cdn.jsdelivr.net/npm/vue/dist/vue.js',
         } ];
@@ -145,22 +149,31 @@ function startApplication( dom, body, ls ) {
     let container = dom.createElement( 'div' );
     application_el.appendChild( container );
     container.id = 'main';
-    container.classList.add( 'container-fluid' );
+    container.classList.add( 'swiper-container' );
     container.style[ 'padding-top' ] = '15px';
     container.style[ 'padding-bottom' ] = '15px';
     container.innerHTML      = `
-    <div class="row" v-if="igs">
-        <card v-for="card in cards" :key="card.id"
+    <div class="swiper-wrapper">
+        <div class="swiper-slide">
+            <div class="container">
+                <div class="row" v-if="igs">
+                    <card v-for="card in cards" :key="card.id"
 
-        v-bind:full_name="card.full_name" 
-        v-bind:profile_pic_url="card.profile_pic_url" 
-        v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
-        v-bind:biography="card.biography"
-        v-bind:id="card.id"
-        v-bind:url="card.url"
-        v-bind:selected="card.selected"
+                    v-bind:full_name="card.full_name" 
+                    v-bind:profile_pic_url="card.profile_pic_url" 
+                    v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
+                    v-bind:biography="card.biography"
+                    v-bind:id="card.id"
+                    v-bind:url="card.url"
+                    v-bind:selected="card.selected"
 
-        ></card>
+                    ></card>
+                </div>
+            </div>
+        </div>
+        <div class="swiper-slide">Лайкер</div>
+        <div class="swiper-slide">Комментер</div>
+        <div class="swiper-slide">Хештагер</div>
     </div>
     `;
     container.innerHTML     += '<alert v-if="! igs" v-bind:message="alert.message"></alert>';
@@ -178,7 +191,7 @@ function startApplication( dom, body, ls ) {
     } );
 
     let col = dom.createElement( 'div' );
-    col.classList.add( 'col-sm-2' );
+    col.classList.add( 'col-sm-3' );
     col.style[ 'padding-top' ] = '15px';
     col.style[ 'padding-bottom' ] = '15px';
     let card = dom.createElement( 'div' );
@@ -230,7 +243,7 @@ function startApplication( dom, body, ls ) {
         template: col.outerHTML,
         methods: {
             removeIg: id => {
-                let igs = application.igs;
+                let igs = application.cards;
                 igs = igs.filter( ig => {
                     return ig.id != id;
                 } );
@@ -238,7 +251,7 @@ function startApplication( dom, body, ls ) {
                 ls.setItem( 'igs', JSON.stringify( igs ) );
             },
             checkIg: id => {
-                let igs = application.igs;
+                let igs = application.cards;
                 igs = igs.map( ig => {
                     if ( ig.id == id && ! ig.selected ) {
                         ig[ 'selected' ] = true;
@@ -294,6 +307,9 @@ function startApplication( dom, body, ls ) {
         let ll = new LazyLoad( {
             elements_selector: "img.card-img-top"
             // ... more custom settings?
+        } );
+        let swiper = new Swiper( '#main', {
+            autoHeight: true
         } );
     } );
 }
