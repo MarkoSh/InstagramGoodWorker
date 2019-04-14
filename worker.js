@@ -202,7 +202,8 @@ function startApplication( dom, body, ls ) {
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
     img.setAttribute( ':src', 'profile_pic_url' );
-    img.setAttribute( 'v-on:mouseover', 'getImagesFor( id )' );
+    img.setAttribute( 'v-on:mouseenter', 'getImagesFor( id )' );
+    img.setAttribute( 'v-on:mouseleave', 'stopShow()' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
     card_body.classList.add( 'card-body' );
@@ -277,8 +278,11 @@ function startApplication( dom, body, ls ) {
                     images: []
                 };
                 if ( images.images.length > 0 ) {
+                    let index = 0;
+                    let images_ = [ { thumbnail_src: this.profile_pic_url_hd } ].concat( images.images );
                     this.t = setInterval( () => {
-
+                        index = index >= images_.length ? 0 : index;
+                        this.profile_pic_url = images_[ index++ ].thumbnail_src;                        
                     }, 1000 );
                 } else {
                     let xhr = new XMLHttpRequest();
@@ -312,6 +316,9 @@ function startApplication( dom, body, ls ) {
                     };
                     xhr.send();
                 }
+            },
+            stopShow: function () {
+                clearInterval( this.t );
             }
         }
     } );
