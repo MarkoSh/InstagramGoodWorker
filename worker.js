@@ -156,6 +156,7 @@ function startApplication( dom, body, ls ) {
     <div class="swiper-wrapper">
         <div class="swiper-slide">
             <div class="container">
+                <alert v-if="! igs" v-bind:message="alert.message"></alert>
                 <div class="row" v-if="igs">
                     <card v-for="card in cards" :key="card.id"
 
@@ -176,7 +177,6 @@ function startApplication( dom, body, ls ) {
         <div class="swiper-slide">Хештагер</div>
     </div>
     `;
-    container.innerHTML     += '<alert v-if="! igs" v-bind:message="alert.message"></alert>';
 
     let alert = dom.createElement( 'div' );
     alert.setAttribute( 'role', 'alert' );
@@ -202,6 +202,7 @@ function startApplication( dom, body, ls ) {
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
     img.setAttribute( ':src', 'profile_pic_url' );
+    img.setAttribute( 'v-on:hover', 'getImagesFor( id )' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
     card_body.classList.add( 'card-body' );
@@ -257,11 +258,13 @@ function startApplication( dom, body, ls ) {
                         ig[ 'selected' ] = true;
                     } else if ( ig.id == id && ig.selected ) {
                         ig[ 'selected' ] = false;
-                    }
-                    
+                    }                    
                     return ig;
                 } );
                 application.cards = igs;
+            },
+            getImagesFor: id => {
+
             }
         }
     } );
@@ -305,7 +308,8 @@ function startApplication( dom, body, ls ) {
 
     Vue.nextTick( () => {
         let ll = new LazyLoad( {
-            elements_selector: "img.card-img-top"
+            elements_selector: "img.card-img-top",
+            load_delay: 1000
             // ... more custom settings?
         } );
         let swiper = new Swiper( '#main', {
