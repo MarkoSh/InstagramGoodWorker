@@ -200,20 +200,20 @@ function startApplication( dom, body, ls ) {
     card_text.setAttribute( 'v-html', 'biography' );
     let card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerHTML = '<i class="fas fa-user-minus"></i>';
+    card_link.innerHTML = '<i class="fas fa-user-minus fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'v-on:click.prevent', 'removeIg( id )' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerHTML = '<i class="fas fa-link"></i>';
+    card_link.innerHTML = '<i class="fas fa-link fa-lg"></i>';
     card_link.setAttribute( ':href', 'url' );
     card_link.setAttribute( 'target', '_blank' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerHTML      = '<i v-if="selected" class="far fa-check-square"></i>';
-    card_link.innerHTML     += '<i v-if="! selected" class="far fa-square"></i>';
+    card_link.innerHTML      = '<i v-if="selected" class="far fa-check-square fa-lg"></i>';
+    card_link.innerHTML     += '<i v-if="! selected" class="far fa-square fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'v-on:click.prevent', 'checkIg( id )' );
 
