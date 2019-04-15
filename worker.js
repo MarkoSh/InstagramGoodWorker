@@ -156,8 +156,8 @@ function startApplication( dom, body, ls ) {
     <div class="swiper-wrapper">
         <div class="swiper-slide">
             <div class="container">
-                <alert v-if="! igs" v-bind:message="alert.message"></alert>
-                <div class="row" v-if="igs">
+                <alert v-if="! cards" v-bind:message="alert.message"></alert>
+                <div class="row" v-if="cards">
                     <card v-for="card in cards" :key="card.id"
 
                     v-bind:full_name="card.full_name" 
@@ -324,17 +324,18 @@ function startApplication( dom, body, ls ) {
     } );
 
     let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
-    igs = igs && igs.length > 0 ? igs : false;
+    if ( igs ) {
+        igs     = igs.map( ig => {
+            ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
+            ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
+            return ig;
+        } );
+    }    
 
     let application = new Vue( {
         el		: '#application',
         data 	: {
-            igs     : igs,
-            cards   : igs ? igs.map( ig => {
-                ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
-                ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
-                return ig;
-            } ) : [],
+            cards   : igs.length > 0 ? igs : false,
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
             },
@@ -357,6 +358,9 @@ function startApplication( dom, body, ls ) {
                     }
                 ]
             }
+        },
+        mounted: function () {
+
         }
     } );
 
