@@ -167,6 +167,7 @@ function startApplication( dom, body, ls ) {
                     v-bind:id="card.id"
                     v-bind:url="card.url"
                     v-bind:selected="card.selected"
+                    v-bind:images="card.images"
 
                     ></card>
                 </div>
@@ -232,6 +233,17 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'v-on:click.prevent', 'checkIg( id )' );
 
+    let progress        = dom.createElement( 'div' ); card.appendChild( progress );
+    progress.classList.add( 'progress' );
+    progress.style.height = '4px';
+    progress.setAttribute( 'v-if', 'images.date < ( new Date() ).getTime() - 86400000' );
+    let progress_bar    = dom.createElement( 'div' ); progress.appendChild( progress_bar );
+    progress_bar.setAttribute( 'class', 'progress-bar progress-bar-striped progress-bar-animated w-75' );
+    progress_bar.setAttribute( 'role', 'progressbar' );
+    progress_bar.setAttribute( 'aria-valuenow', 0 );
+    progress_bar.setAttribute( 'aria-valuemin', 0 );
+    progress_bar.setAttribute( 'aria-valuemax', 100 );
+    
     Vue.component( 'card', {
         props   : [
             'profile_pic_url_hd',
@@ -240,12 +252,10 @@ function startApplication( dom, body, ls ) {
             'biography',
             'id',
             'url',
-            'selected'
+            'selected',
+            'images'
         ],
         template: col.outerHTML,
-        data: {
-            t: false
-        },
         methods: {
             removeIg: id => {
                 let igs = application.cards;
@@ -268,7 +278,7 @@ function startApplication( dom, body, ls ) {
                 application.cards = igs;
             },
             getImagesFor: function ( id ) {
-                clearInterval( this.t );
+                clearInterval( this.$parent.t );
                 let igs = application.cards;
                 let ig = igs.find( ig => {
                     return ig.id == id;
@@ -280,7 +290,7 @@ function startApplication( dom, body, ls ) {
                 if ( images.images.length > 0 ) {
                     let index = 0;
                     let images_ = [ { thumbnail_src: this.profile_pic_url_hd } ].concat( images.images );
-                    this.t = setInterval( () => {
+                    this.$parent.t = setInterval( () => {
                         index = index >= images_.length ? 0 : index;
                         this.profile_pic_url = images_[ index++ ].thumbnail_src;                        
                     }, 1000 );
@@ -318,7 +328,7 @@ function startApplication( dom, body, ls ) {
                 }
             },
             stopShow: function () {
-                clearInterval( this.t );
+                clearInterval( this.$parent.t );
             }
         }
     } );
@@ -335,6 +345,7 @@ function startApplication( dom, body, ls ) {
     let application = new Vue( {
         el		: '#application',
         data 	: {
+            t       : false,
             cards   : igs.length > 0 ? igs : false,
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
@@ -358,9 +369,6 @@ function startApplication( dom, body, ls ) {
                     }
                 ]
             }
-        },
-        mounted: function () {
-
         }
     } );
 
