@@ -287,7 +287,7 @@ function startApplication( dom, body, ls ) {
                     date: null,
                     images: []
                 };
-                if ( images.images.length > 0 ) {
+                if ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) ) {
                     let index = 0;
                     let images_ = [ { thumbnail_src: this.profile_pic_url_hd } ].concat( images.images );
                     this.$parent.t = setInterval( () => {
@@ -323,6 +323,7 @@ function startApplication( dom, body, ls ) {
                             };
                             ls.setItem( 'igs', JSON.stringify( igs ) );
                         }
+                        this.getImagesFor( id );
                     };
                     xhr.send();
                 }
