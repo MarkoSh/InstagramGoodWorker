@@ -244,7 +244,7 @@ function startApplication( dom, body, ls ) {
     progress_bar.setAttribute( 'aria-valuemin', 0 );
     progress_bar.setAttribute( 'aria-valuemax', 100 );
     
-    Vue.component( 'card', {
+    let card_component = {
         props   : [
             'profile_pic_url_hd',
             'profile_pic_url',
@@ -332,7 +332,7 @@ function startApplication( dom, body, ls ) {
                 clearInterval( this.$parent.t );
             }
         }
-    } );
+    };
 
     let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
     if ( igs ) {
@@ -370,6 +370,9 @@ function startApplication( dom, body, ls ) {
                     }
                 ]
             }
+        },
+        components : {
+            'card'  : card_component
         }
     } );
 
