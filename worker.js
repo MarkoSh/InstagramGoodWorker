@@ -126,10 +126,11 @@ function startApplication( dom, body, ls ) {
     let application_el = dom.createElement( 'div' );
     body.appendChild( application_el );
     application_el.id = 'application';
+    application_el.style[ 'padding-top' ] = '56px';
 
     let nav = dom.createElement( 'nav' );
     application_el.appendChild( nav );
-    nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark' );
+    nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark fixed-top' );
 
     let html = `
     <a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>
@@ -217,6 +218,8 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Удалить из базы' );
     card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
@@ -224,20 +227,28 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( ':href', 'url' );
     card_link.setAttribute( 'title', 'Перейти в профиль' );
     card_link.setAttribute( 'target', '_blank' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
     card_link.innerHTML      = '<i class="fas fa-heart fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'title', 'Отправить лайки' );
-    card_link.setAttribute( 'v-on:click.prevent', 'sendLikes' );
+    card_link.setAttribute( 'title', 'Отправить лайк' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendLike' );
+    card_link.setAttribute( 'v-on:dbkclick.native.prevent', 'sendLike' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
     card_link.innerHTML      = '<i class="fas fa-comment fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'title', 'Отправить комментарии' );
-    card_link.setAttribute( 'v-on:click.prevent', 'sendComments' );
+    card_link.setAttribute( 'title', 'Отправить комментарий' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendComment' );
+    card_link.setAttribute( 'v-on:dbkclick.native.prevent', 'sendComments' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
@@ -246,6 +257,8 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'v-bind:title', 'hasImages() ? "Слайдшоу" : "Обновить изображения"' );
     card_link.setAttribute( 'v-on:click.prevent', 'getImagesFor' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
     
     let card_component = {
         props   : [
@@ -269,7 +282,13 @@ function startApplication( dom, body, ls ) {
                 } );
                 ls.setItem( 'igs', JSON.stringify( igs ) );
             },
+            sendLike: function ( e ) {
+                
+            },
             sendLikes: function ( e ) {
+                
+            },
+            sendComment: function ( e ) {
                 
             },
             sendComments: function ( e ) {
@@ -396,5 +415,7 @@ function startApplication( dom, body, ls ) {
         let swiper = new Swiper( '#main', {
             autoHeight: true
         } );
+
+        $( '[data-toggle="tooltip"]' ).tooltip();
     } );
 }
