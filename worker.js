@@ -244,7 +244,7 @@ function startApplication( dom, body, ls ) {
     card_link.innerHTML      = '<i v-if="hasImages()" class="fas fa-images fa-lg"></i>';
     card_link.innerHTML      += '<i v-else class="far fa-images fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'v-bind:title', '{ "Слайдшоу": hasImages, "Слайдшоу": ! hasImages }' );
+    card_link.setAttribute( 'v-bind:title', 'hasImages() ? "Слайдшоу" : "Обновить изображения"' );
     card_link.setAttribute( 'v-on:click.prevent', 'getImagesFor' );
     
     let card_component = {
