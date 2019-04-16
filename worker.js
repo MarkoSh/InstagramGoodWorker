@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Good worker
+// @name         Отличный работник для инстаграма
 // @namespace    http://tampermonkey.net/
 // @version      0.1
 // @description  try to take over the world!
@@ -173,9 +173,6 @@ function startApplication( dom, body, ls ) {
                 </div>
             </div>
         </div>
-        <div class="swiper-slide">Лайкер</div>
-        <div class="swiper-slide">Комментер</div>
-        <div class="swiper-slide">Хештагер</div>
     </div>
     `;
 
@@ -228,15 +225,22 @@ function startApplication( dom, body, ls ) {
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerHTML      = '<i v-if="selected" class="far fa-check-square fa-lg"></i>';
-    card_link.innerHTML     += '<i v-if="! selected" class="far fa-square fa-lg"></i>';
+    card_link.innerHTML      = '<i class="fas fa-heart fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'v-on:click.prevent', 'checkIg( id )' );
+    card_link.setAttribute( 'title', 'Отправить лайки' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendLikes( id )' );
+
+    card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerHTML      = '<i class="fas fa-comment fa-lg"></i>';
+    card_link.setAttribute( 'href', '#' );
+    card_link.setAttribute( 'title', 'Отправить комментарии' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendComments( id )' );
 
     let progress        = dom.createElement( 'div' ); card.appendChild( progress );
     progress.classList.add( 'progress' );
     progress.style.height = '4px';
-    progress.setAttribute( 'v-if', 'images.date < ( new Date() ).getTime() - 86400000' );
+    progress.setAttribute( 'v-if', '( images && images.date < ( new Date() ).getTime() - 86400000 ) || ! images' );
     let progress_bar    = dom.createElement( 'div' ); progress.appendChild( progress_bar );
     progress_bar.setAttribute( 'class', 'progress-bar progress-bar-striped progress-bar-animated w-75' );
     progress_bar.setAttribute( 'role', 'progressbar' );
@@ -265,17 +269,11 @@ function startApplication( dom, body, ls ) {
                 application.cards = igs;
                 ls.setItem( 'igs', JSON.stringify( igs ) );
             },
-            checkIg: id => {
-                let igs = application.cards;
-                igs = igs.map( ig => {
-                    if ( ig.id == id && ! ig.selected ) {
-                        ig[ 'selected' ] = true;
-                    } else if ( ig.id == id && ig.selected ) {
-                        ig[ 'selected' ] = false;
-                    }                    
-                    return ig;
-                } );
-                application.cards = igs;
+            sendLikes: id => {
+                
+            },
+            sendComments: id => {
+                
             },
             getImagesFor: function ( id ) {
                 clearInterval( this.$parent.t );
