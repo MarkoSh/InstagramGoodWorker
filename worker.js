@@ -164,7 +164,7 @@ function startApplication( dom, body, ls ) {
                     v-bind:profile_pic_url="card.profile_pic_url" 
                     v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
                     v-bind:biography="card.biography"
-                    v-bind:id="card.id"
+                    v-bind:id="parseInt( card.id )"
                     v-bind:url="card.url"
                     v-bind:selected="card.selected"
                     v-bind:images="card.images"
@@ -200,8 +200,8 @@ function startApplication( dom, body, ls ) {
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
     img.setAttribute( ':src', 'profile_pic_url' );
-    img.setAttribute( 'v-on:mouseenter', 'getImagesFor( id )' );
-    img.setAttribute( 'v-on:mouseleave', 'stopShow()' );
+    img.setAttribute( 'v-on:mouseenter', 'getImagesFor' );
+    img.setAttribute( 'v-on:mouseleave', 'stopShow' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
     card_body.classList.add( 'card-body' );
@@ -215,12 +215,14 @@ function startApplication( dom, body, ls ) {
     card_link.classList.add( 'card-link' );
     card_link.innerHTML = '<i class="fas fa-user-minus fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'v-on:click.prevent', 'removeIg( id )' );
+    card_link.setAttribute( 'title', 'Удалить из базы' );
+    card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
     card_link.innerHTML = '<i class="fas fa-link fa-lg"></i>';
     card_link.setAttribute( ':href', 'url' );
+    card_link.setAttribute( 'title', 'Перейти в профиль' );
     card_link.setAttribute( 'target', '_blank' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
@@ -228,25 +230,22 @@ function startApplication( dom, body, ls ) {
     card_link.innerHTML      = '<i class="fas fa-heart fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Отправить лайки' );
-    card_link.setAttribute( 'v-on:click.prevent', 'sendLikes( id )' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendLikes' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
     card_link.innerHTML      = '<i class="fas fa-comment fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Отправить комментарии' );
-    card_link.setAttribute( 'v-on:click.prevent', 'sendComments( id )' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendComments' );
 
-    let progress        = dom.createElement( 'div' ); card.appendChild( progress );
-    progress.classList.add( 'progress' );
-    progress.style.height = '4px';
-    progress.setAttribute( 'v-if', '( images && images.date < ( new Date() ).getTime() - 86400000 ) || ! images' );
-    let progress_bar    = dom.createElement( 'div' ); progress.appendChild( progress_bar );
-    progress_bar.setAttribute( 'class', 'progress-bar progress-bar-striped progress-bar-animated w-75' );
-    progress_bar.setAttribute( 'role', 'progressbar' );
-    progress_bar.setAttribute( 'aria-valuenow', 0 );
-    progress_bar.setAttribute( 'aria-valuemin', 0 );
-    progress_bar.setAttribute( 'aria-valuemax', 100 );
+    card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerHTML      = '<i v-if="hasImages()" class="fas fa-images fa-lg"></i>';
+    card_link.innerHTML      += '<i v-else class="far fa-images fa-lg"></i>';
+    card_link.setAttribute( 'href', '#' );
+    card_link.setAttribute( 'v-bind:title', '{ "Слайдшоу": hasImages, "Слайдшоу": ! hasImages }' );
+    card_link.setAttribute( 'v-on:click.prevent', 'getImagesFor' );
     
     let card_component = {
         props   : [
@@ -257,25 +256,39 @@ function startApplication( dom, body, ls ) {
             'id',
             'url',
             'selected',
-            'images'
+            'images',
+            'images.images'
         ],
         template: col.outerHTML,
         methods: {
-            removeIg: id => {
+            removeIg: function ( e ) {
+                let id = this.id;
                 let igs = application.cards;
                 igs = igs.filter( ig => {
                     return ig.id != id;
                 } );
-                application.cards = igs;
                 ls.setItem( 'igs', JSON.stringify( igs ) );
             },
-            sendLikes: id => {
+            sendLikes: function ( e ) {
                 
             },
-            sendComments: id => {
+            sendComments: function ( e ) {
                 
             },
-            getImagesFor: function ( id ) {
+            hasImages: function () {
+                let id = this.id;
+                let igs = this.$parent.cards;
+                let ig = igs.find( ig => {
+                    return ig.id == id;
+                } );
+                let images = ig.images || {
+                    date: null,
+                    images: []
+                };
+                return ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) );
+            },
+            getImagesFor: function ( e ) {
+                let id = this.id;
                 clearInterval( this.$parent.t );
                 let igs = application.cards;
                 let ig = igs.find( ig => {
@@ -285,7 +298,7 @@ function startApplication( dom, body, ls ) {
                     date: null,
                     images: []
                 };
-                if ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) ) {
+                if ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) ) { //86400000
                     let index = 0;
                     let images_ = [ { thumbnail_src: this.profile_pic_url_hd } ].concat( images.images );
                     this.$parent.t = setInterval( () => {
