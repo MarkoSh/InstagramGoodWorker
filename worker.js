@@ -96,14 +96,11 @@
                 setTimeout( checkLoaded, 500 );
             } else {
                 let button = dom.createElement( 'button' );
-                button.setAttribute( 'class', defaultBtn.getAttribute( 'class' ) );
-                button.setAttribute( 'style', 'position: fixed; top: 100px; right: 100px; width: 30px; height: 30px;' );
-                body.appendChild( button );
+                button.setAttribute( 'style', 'position: fixed; border-radius: 3px; cursor: pointer; top: 100px; right: 100px; width: 30px; height: 30px; border: none; background: #3897f0; color: white;' );
                 button.innerHTML = igs.find( ig_ => {
                     return ig_.id == ig.id;
                 } ) ? '-' : '+';
                 button.onclick = e => {
-                    button.remove();
                     if ( igs.find( ig_ => {
                         return ig_.id == ig.id;
                     } ) ) {
@@ -114,12 +111,20 @@
                     ls.setItem( 'igs', JSON.stringify( igs ) );
                     checkLoaded();
                 };
+                body.appendChild( button );
             }
         };
         checkLoaded();
     }
 
 } )( window._sharedData, document, document.body, localStorage );
+
+function getCookie( name ) {
+    var matches = document.cookie.match( new RegExp(
+      "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+    ));
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+}
 
 function startApplication( dom, body, ls ) {
 
@@ -165,10 +170,8 @@ function startApplication( dom, body, ls ) {
                     v-bind:profile_pic_url="card.profile_pic_url" 
                     v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
                     v-bind:biography="card.biography"
-                    v-bind:id="parseInt( card.id )"
+                    v-bind:id="card.id"
                     v-bind:url="card.url"
-                    v-bind:selected="card.selected"
-                    v-bind:images="card.images"
 
                     ></card>
                 </div>
@@ -190,7 +193,7 @@ function startApplication( dom, body, ls ) {
     } );
 
     let col = dom.createElement( 'div' );
-    col.classList.add( 'col-sm-3' );
+    col.classList.add( 'col-sm-4' );
     col.style[ 'padding-top' ] = '15px';
     col.style[ 'padding-bottom' ] = '15px';
     let card = dom.createElement( 'div' );
@@ -200,8 +203,8 @@ function startApplication( dom, body, ls ) {
     let img = dom.createElement( 'img' ); card.appendChild( img );
     img.classList.add( 'card-img-top' );
     img.setAttribute( ':data-src', 'profile_pic_url_hd' );
-    img.setAttribute( ':src', 'profile_pic_url' );
-    img.setAttribute( 'v-on:mouseenter', 'getImagesFor' );
+    img.setAttribute( ':src', 'profile_pic_url_' );
+    img.setAttribute( 'v-on:mouseenter', 'startShow' );
     img.setAttribute( 'v-on:mouseleave', 'stopShow' );
     img.alt = '...';
     let card_body = dom.createElement( 'div' ); card.appendChild( card_body );
@@ -218,8 +221,9 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Удалить из базы' );
     card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
-    card_link.setAttribute( 'data-toggle', 'tooltip' );
-    card_link.setAttribute( 'data-placement', 'bottom' );
+    // card_link.setAttribute( 'data-toggle', 'tooltip' );
+    // card_link.setAttribute( 'data-placement', 'bottom' );
+    // card_link.setAttribute( 'data-trigger', 'hover' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
@@ -236,7 +240,15 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Отправить лайк' );
     card_link.setAttribute( 'v-on:click.prevent', 'sendLike' );
-    card_link.setAttribute( 'v-on:dbkclick.native.prevent', 'sendLike' );
+    card_link.setAttribute( 'data-toggle', 'tooltip' );
+    card_link.setAttribute( 'data-placement', 'bottom' );
+
+    card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
+    card_link.classList.add( 'card-link' );
+    card_link.innerHTML      = '<i class="fas fa-heartbeat fa-lg"></i>';
+    card_link.setAttribute( 'href', '#' );
+    card_link.setAttribute( 'title', 'Отправить лайки' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendLikes' );
     card_link.setAttribute( 'data-toggle', 'tooltip' );
     card_link.setAttribute( 'data-placement', 'bottom' );
 
@@ -252,11 +264,10 @@ function startApplication( dom, body, ls ) {
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
-    card_link.innerHTML      = '<i v-if="hasImages()" class="fas fa-images fa-lg"></i>';
-    card_link.innerHTML      += '<i v-else class="far fa-images fa-lg"></i>';
+    card_link.innerHTML      = '<i class="fas fa-comments fa-lg"></i>';
     card_link.setAttribute( 'href', '#' );
-    card_link.setAttribute( 'v-bind:title', 'hasImages() ? "Слайдшоу" : "Обновить изображения"' );
-    card_link.setAttribute( 'v-on:click.prevent', 'getImagesFor' );
+    card_link.setAttribute( 'title', 'Отправить комментарии' );
+    card_link.setAttribute( 'v-on:click.prevent', 'sendComments' );
     card_link.setAttribute( 'data-toggle', 'tooltip' );
     card_link.setAttribute( 'data-placement', 'bottom' );
     
@@ -267,99 +278,73 @@ function startApplication( dom, body, ls ) {
             'full_name',
             'biography',
             'id',
-            'url',
-            'selected',
-            'images',
-            'images.images'
+            'url'
         ],
         template: col.outerHTML,
         methods: {
             removeIg: function ( e ) {
                 let id = this.id;
-                let igs = application.cards;
-                igs = igs.filter( ig => {
+                application.cards = application.cards.filter( ig => {
                     return ig.id != id;
                 } );
-                ls.setItem( 'igs', JSON.stringify( igs ) );
+                ls.setItem( 'igs', JSON.stringify( application.cards ) );
             },
             sendLike: function ( e ) {
-                
+                let id = this.id;
+                let ig = application.cards.find( ig => {
+                    return ig.id == id;
+                } );
+                let image = ig.edge_owner_to_timeline_media.edges[ 0 ].node;
+                this.$parent.addTask( 'like', image, null );
             },
             sendLikes: function ( e ) {
-                
+                let id = this.id;
+                let ig = application.cards.find( ig => {
+                    return ig.id == id;
+                } );
+                let images = ig.edge_owner_to_timeline_media.edges;
+                images.forEach( image => {
+                    this.$parent.addTask( 'like', image.node, null );
+                } );
             },
             sendComment: function ( e ) {
-                
+                let id = this.id;
+                let ig = application.cards.find( ig => {
+                    return ig.id == id;
+                } );
+                let image = ig.edge_owner_to_timeline_media.edges[ 0 ].node;
+                this.$parent.addTask( 'comment', image, null );
             },
             sendComments: function ( e ) {
-                
-            },
-            hasImages: function () {
                 let id = this.id;
-                let igs = this.$parent.cards;
-                let ig = igs.find( ig => {
+                let ig = application.cards.find( ig => {
                     return ig.id == id;
                 } );
-                let images = ig.images || {
-                    date: null,
-                    images: []
-                };
-                return ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) );
+                let images = ig.edge_owner_to_timeline_media.edges;
+                images.forEach( image => {
+                    this.$parent.addTask( 'like', image.node, null );
+                } );
             },
-            getImagesFor: function ( e ) {
+            startShow: function ( e ) {
                 let id = this.id;
-                clearInterval( this.$parent.t );
-                let igs = application.cards;
-                let ig = igs.find( ig => {
+                let ig = application.cards.find( ig => {
                     return ig.id == id;
                 } );
-                let images = ig.images || {
-                    date: null,
-                    images: []
-                };
-                if ( images.images.length > 0 && ! ( images.date < ( new Date() ).getTime() - 86400000 ) ) { //86400000
-                    let index = 0;
-                    let images_ = [ { thumbnail_src: this.profile_pic_url_hd } ].concat( images.images );
-                    this.$parent.t = setInterval( () => {
-                        index = index >= images_.length ? 0 : index;
-                        this.profile_pic_url = images_[ index++ ].thumbnail_src;                        
-                    }, 1000 );
-                } else {
-                    let xhr = new XMLHttpRequest();
-                    xhr.open( 'GET', ig.url );
-                    xhr.onload = () => {
-                        let html = dom.createElement( 'div' );
-                        html.innerHTML = xhr.responseText;
-                        let scripts = html.querySelectorAll( 'script' );
-                        let script = Array.prototype.find.call( scripts, script => {
-                            return script.innerHTML.match( /^window\._sharedData/ );
-                        } );
-                        if ( script ) {
-                            script.innerHTML = script.innerHTML.replace( /_sharedData/, '_sharedData_' + id );
-                            eval( script.innerHTML );
-                        }
-                        let sd = window[ '_sharedData_' + id ];
-                        let media = sd.entry_data.ProfilePage[ 0 ].graphql.user.edge_owner_to_timeline_media;
-                        if ( media.count > 0 ) {
-                            let images = media.edges.map( edge => {
-                                return {
-                                    thumbnail_src   : edge.node.thumbnail_src,
-                                    display_url     : edge.node.display_url
-                                };
-                            } ).slice( 0, 3 );
-                            ig[ 'images' ] = {
-                                date    : ( new Date() ).getTime(),
-                                images  : images
-                            };
-                            ls.setItem( 'igs', JSON.stringify( igs ) );
-                        }
-                        this.getImagesFor( id );
-                    };
-                    xhr.send();
-                }
+                let images = ig.edge_owner_to_timeline_media.edges;
+                let index = 0;
+                this.t = setInterval( () => {
+                    let image_url = images[ index++ ].node.thumbnail_src;
+                    this.profile_pic_url_ = image_url;
+                    index = index < images.length ? index : 0;
+                }, 1000 );
             },
-            stopShow: function () {
-                clearInterval( this.$parent.t );
+            stopShow: function ( e ) {
+                clearInterval( this.t );
+            },
+        },
+        data: function () {
+            return {
+                profile_pic_url_: this.profile_pic_url
             }
         }
     };
@@ -371,8 +356,7 @@ function startApplication( dom, body, ls ) {
             ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
             return ig;
         } );
-    }    
-
+    }
     let application = new Vue( {
         el		: '#application',
         data 	: {
@@ -399,6 +383,16 @@ function startApplication( dom, body, ls ) {
                         func: 'javascript:hashtagerFunc()'
                     }
                 ]
+            }
+        },
+        methods    : {
+            addTask: function ( type, node, meta ) {
+                let task = { status: 'pending', meta: meta };
+                if ( ! node.tasks ) node[ 'tasks' ] = {};
+                if ( ! node.tasks[ type ] ) {
+                    node.tasks[ type ] = task;
+                }
+                ls.setItem( 'igs', JSON.stringify( application.cards ) );
             }
         },
         components : {
