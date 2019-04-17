@@ -221,9 +221,6 @@ function startApplication( dom, body, ls ) {
     card_link.setAttribute( 'href', '#' );
     card_link.setAttribute( 'title', 'Удалить из базы' );
     card_link.setAttribute( 'v-on:click.prevent', 'removeIg' );
-    // card_link.setAttribute( 'data-toggle', 'tooltip' );
-    // card_link.setAttribute( 'data-placement', 'bottom' );
-    // card_link.setAttribute( 'data-trigger', 'hover' );
 
     card_link = dom.createElement( 'a' ); card_body.appendChild( card_link );
     card_link.classList.add( 'card-link' );
