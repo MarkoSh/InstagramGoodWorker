@@ -107,7 +107,7 @@
                         igs = igs.filter( ig_ => {
                             return ig_.id != ig.id;
                         } );
-                    } else igs.push( ig );
+                    } else igs = [ ig ].concat( igs );
                     ls.setItem( 'igs', JSON.stringify( igs ) );
                     checkLoaded();
                 };
