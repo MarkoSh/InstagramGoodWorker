@@ -137,48 +137,75 @@ function startApplication( dom, body, ls ) {
     application_el.appendChild( nav );
     nav.setAttribute( 'class', 'navbar navbar-expand-lg navbar-dark bg-dark fixed-top' );
 
-    let html = `
-    <a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
-            <li class="nav-item" v-for="link in nav.links">
-                <a class="nav-link" :href="link.href" :onclick="link.func">{{ link.text }}</a>
-            </li>
-        </ul>
-    </div>
-    `;
+    let html = '<a class="navbar-brand" href="//www.instagram.com/about/us/">Работник для Инстаграма</a>';
     nav.innerHTML = html;
 
     let container = dom.createElement( 'div' );
     application_el.appendChild( container );
     container.id = 'main';
-    container.classList.add( 'swiper-container' );
+    container.classList.add( 'main' );
     container.style[ 'padding-top' ] = '15px';
     container.style[ 'padding-bottom' ] = '15px';
     container.innerHTML      = `
-    <div class="swiper-wrapper">
-        <div class="swiper-slide">
-            <div class="container">
-                <alert v-if="! cards" v-bind:message="alert.message"></alert>
-                <div class="row" v-if="cards">
-                    <card v-for="card in cards" :key="card.id"
+    <div class="container">
+        <alert v-if="! cards" v-bind:message="alert.message"></alert>
+        <div class="row" v-if="cards">
+            <card v-for="card in cards" :key="card.id"
 
-                    v-bind:full_name="card.full_name" 
-                    v-bind:profile_pic_url="card.profile_pic_url" 
-                    v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
-                    v-bind:biography="card.biography"
-                    v-bind:id="card.id"
-                    v-bind:url="card.url"
+            v-bind:full_name="card.full_name" 
+            v-bind:profile_pic_url="card.profile_pic_url" 
+            v-bind:profile_pic_url_hd="card.profile_pic_url_hd"
+            v-bind:biography="card.biography"
+            v-bind:id="card.id"
+            v-bind:url="card.url"
 
-                    ></card>
-                </div>
-            </div>
+            ></card>
         </div>
     </div>
     `;
+
+    let tasks_list = dom.createElement( 'div' );
+    tasks_list.classList.add( 'list-group' );
+    tasks_list.onmouseenter = e => {
+        debugger;
+    };
+    tasks_list.onmouseleave = e => {
+        debugger;
+    };
+    tasks_list.innerHTML = `
+    <task v-for="task in tasks" :key="task.id" 
+
+    v-bind:id="task.id"
+    v-bind:node_id="task.node_id"
+    v-bind:thumbnail_src="task.thumbnail_src"
+    v-bind:url="task.url"
+    v-bind:mode="task.mode"
+    v-bind:status="task.task.status"
+    >
+    </task>
+    `;
+    application_el.appendChild( tasks_list );
+    tasks_list.setAttribute( 'style', 'position: fixed; top: 100px; right: 0px; bottom: 15px; overflow: auto;' );
+
+    let list_group_item = dom.createElement( 'a' );
+    list_group_item.setAttribute( 'class', 'list-group-item list-group-item-action' );
+    list_group_item.setAttribute( ':href', 'url' );
+    list_group_item.setAttribute( 'target', '_blank' );
+    let thumbnail = dom.createElement( 'img' ); list_group_item.appendChild( thumbnail );
+    thumbnail.setAttribute( ':src', 'thumbnail_src' );
+    thumbnail.setAttribute( 'style', 'width: 50px;' );
+    list_group_item.innerHTML += `
+    <span style="display: inline-block; vertical-align: middle; padding: 0 10px;">Задача {{ id }} - режим {{ mode }}<br />
+    Статус {{ status }}</span>
+    `;
+
+    let task_component = {
+        props   : [ 'id', 'thumbnail_src', 'url', 'task', 'mode', 'status' ],
+        template: list_group_item.outerHTML,
+        data: function () {
+            return {};
+        }
+    };
 
     let alert = dom.createElement( 'div' );
     alert.setAttribute( 'role', 'alert' );
@@ -319,7 +346,7 @@ function startApplication( dom, body, ls ) {
                 } );
                 let images = ig.edge_owner_to_timeline_media.edges;
                 images.forEach( image => {
-                    this.$parent.addTask( 'like', image.node, null );
+                    this.$parent.addTask( 'comment', image.node, null );
                 } );
             },
             startShow: function ( e ) {
@@ -342,44 +369,47 @@ function startApplication( dom, body, ls ) {
         data: function () {
             return {
                 profile_pic_url_: this.profile_pic_url
-            }
+            };
         }
     };
 
-    let igs = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
+
+    let igs     = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
+    let tasks   = [];
     if ( igs ) {
         igs     = igs.map( ig => {
             ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
             ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
             return ig;
         } );
+        let i = 0;
+        igs.forEach( ig => {
+            ig.edge_owner_to_timeline_media.edges.forEach( edge => {
+                if ( edge.node.tasks ) {
+                    Object.keys( edge.node.tasks ).forEach( key => {
+                        tasks.push( {
+                            id              : i++,
+                            node_id         : edge.node.id,
+                            thumbnail_src   : edge.node.thumbnail_src,
+                            url             : '//www.instagram.com/p/' + edge.node.shortcode + '/',
+                            mode            : key,
+                            task            : edge.node.tasks[ key ]
+                        } );
+                    } );
+                    
+                }
+            } );
+        } );
     }
+    shuffle( tasks );
     let application = new Vue( {
         el		: '#application',
         data 	: {
             t       : false,
             cards   : igs.length > 0 ? igs : false,
+            tasks   : tasks,
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
-            },
-            nav    : {
-                links : [
-                    {
-                        href: '#',
-                        text: 'Лайкер',
-                        func: 'javascript:likerFunc()'
-                    },
-                    {
-                        href: '#',
-                        text: 'Комментер',
-                        func: 'javascript:commenterFunc()'
-                    },
-                    {
-                        href: '#',
-                        text: 'Хештагер',
-                        func: 'javascript:hashtagerFunc()'
-                    }
-                ]
             }
         },
         methods    : {
@@ -390,10 +420,11 @@ function startApplication( dom, body, ls ) {
                     node.tasks[ type ] = task;
                 }
                 ls.setItem( 'igs', JSON.stringify( application.cards ) );
-            }
+            }     
         },
         components : {
-            'card'  : card_component
+            'card'  : card_component,
+            'task'  : task_component
         }
     } );
 
@@ -403,10 +434,18 @@ function startApplication( dom, body, ls ) {
             load_delay: 1000
             // ... more custom settings?
         } );
-        let swiper = new Swiper( '#main', {
-            autoHeight: true
-        } );
-
         $( '[data-toggle="tooltip"]' ).tooltip();
     } );
+}
+
+/**
+ * Shuffles array in place. ES6 version
+ * @param {Array} a items An array containing the items.
+ */
+function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
 }
