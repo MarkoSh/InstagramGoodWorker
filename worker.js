@@ -189,6 +189,7 @@ function startApplication( dom, body, ls ) {
 
     let list_group_item = dom.createElement( 'a' );
     list_group_item.setAttribute( 'class', 'list-group-item list-group-item-action' );
+    list_group_item.setAttribute( ':class', '{ "list-group-item-warning": status == "process" }' );
     list_group_item.setAttribute( ':href', 'url' );
     list_group_item.setAttribute( 'target', '_blank' );
     let thumbnail = dom.createElement( 'img' ); list_group_item.appendChild( thumbnail );
@@ -311,6 +312,7 @@ function startApplication( dom, body, ls ) {
                 application.cards = application.cards.filter( ig => {
                     return ig.id != id;
                 } );
+                application.tasks = tasks( application.cards );
                 ls.setItem( 'igs', JSON.stringify( application.cards ) );
             },
             sendLike: function ( e ) {
@@ -375,14 +377,9 @@ function startApplication( dom, body, ls ) {
 
 
     let igs     = ls.getItem( 'igs' ) ? JSON.parse( ls.getItem( 'igs' ) ) : false;
-    let tasks   = [];
-    if ( igs ) {
-        igs     = igs.map( ig => {
-            ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
-            ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
-            return ig;
-        } );
+    let tasks   = ( igs ) => {
         let i = 0;
+        let tasks = [];
         igs.forEach( ig => {
             ig.edge_owner_to_timeline_media.edges.forEach( edge => {
                 if ( edge.node.tasks ) {
@@ -400,14 +397,24 @@ function startApplication( dom, body, ls ) {
                 }
             } );
         } );
+        shuffle( tasks );
+        return tasks;
+    };
+    if ( igs ) {
+        igs     = igs.map( ig => {
+            ig[ 'url' ]     = '//www.instagram.com/' + ig.username + '/';
+            ig.biography    = ig.biography.replace( /([^>])\n/g, "$1<br />" );
+            return ig;
+        } );
+        
     }
-    shuffle( tasks );
+    
     let application = new Vue( {
         el		: '#application',
         data 	: {
             t       : false,
             cards   : igs.length > 0 ? igs : false,
-            tasks   : tasks,
+            tasks   : tasks( igs ),
             alert   : {
                 message: 'В базе нет записей, посещайте интересующие вас профили и добавляйте их в базу'
             }
@@ -419,6 +426,7 @@ function startApplication( dom, body, ls ) {
                 if ( ! node.tasks[ type ] ) {
                     node.tasks[ type ] = task;
                 }
+                application.tasks = tasks( application.cards );
                 ls.setItem( 'igs', JSON.stringify( application.cards ) );
             }     
         },
@@ -435,6 +443,13 @@ function startApplication( dom, body, ls ) {
             // ... more custom settings?
         } );
         $( '[data-toggle="tooltip"]' ).tooltip();
+
+        let i = 0;
+        let t = setInterval( () => {
+            let task = application.tasks[ i++ ];
+            task.task.status = 'process';
+            if ( i >= application.tasks.length ) clearInterval( t );
+        }, 1000 );
     } );
 }
 
