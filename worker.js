@@ -143,6 +143,28 @@ function startApplication( dom, body, ls ) {
             &:hover {
                 right: 0;
             }
+            /* width */
+            &::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            /* Track */
+            &::-webkit-scrollbar-track {
+                background: #f1f1f1; 
+            }
+
+            /* Handle */
+            &::-webkit-scrollbar-thumb {
+                background: #888; 
+            }
+
+            /* Handle on hover */
+            &::-webkit-scrollbar-thumb:hover {
+                background: #555; 
+            }
+            .list-group-item-success {
+                display: none;
+            }
         }
     `;
 
@@ -469,6 +491,7 @@ function startApplication( dom, body, ls ) {
                 }
             } catch ( e ) {
                 task.task.status = 'failed';
+                setTimeout( tasker, rand( 1, 5 ) * 10000 );
             }
         };
         xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
