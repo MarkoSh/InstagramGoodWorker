@@ -425,9 +425,9 @@ function startApplication( dom, body, ls ) {
                 if ( ! node.tasks ) node[ 'tasks' ] = {};
                 if ( ! node.tasks[ type ] ) {
                     node.tasks[ type ] = task;
-                }
-                application.tasks = tasks( application.cards );
-                ls.setItem( 'igs', JSON.stringify( application.cards ) );
+                    application.tasks = tasks( application.cards );
+                    ls.setItem( 'igs', JSON.stringify( application.cards ) );
+                }                
             }     
         },
         components : {
@@ -435,6 +435,41 @@ function startApplication( dom, body, ls ) {
             'task'  : task_component
         }
     } );
+
+    let sendLike = ( task ) => {
+        task.task.status = 'process';
+        let xhr = new XMLHttpRequest();
+        xhr.open( 'POST', 'https://www.instagram.com/web/likes/' + task.node_id + '/like/' );
+        xhr.onload = () => {
+            let response = xhr.responseText;
+            try {
+                response = JSON.parse( response );
+                if ( 'ok' == response.status ) {
+                    task.task.status = 'success';
+                    ls.setItem( 'igs', JSON.stringify( application.cards ) );
+                }
+            } catch ( e ) {
+                task.task.status = 'failed';
+            }
+        };
+        xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
+        xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
+        xhr.send();
+    };
+
+    let tasker = () => {
+        if ( typeof tasker.i == 'undefined' ) tasker.i = 0;
+        if ( tasker.i >= application.tasks.length ) return true;
+        let task = application.tasks[ tasker.i++ ];
+        if ( 'pending' == task.task.status ) {
+            switch ( task.mode ) {
+                case 'like':
+                    sendLike( task );
+                    break;
+            }
+            
+        }            
+    };
 
     Vue.nextTick( () => {
         let ll = new LazyLoad( {
@@ -444,12 +479,7 @@ function startApplication( dom, body, ls ) {
         } );
         $( '[data-toggle="tooltip"]' ).tooltip();
 
-        let i = 0;
-        let t = setInterval( () => {
-            let task = application.tasks[ i++ ];
-            task.task.status = 'process';
-            if ( i >= application.tasks.length ) clearInterval( t );
-        }, 1000 );
+        tasker();
     } );
 }
 
