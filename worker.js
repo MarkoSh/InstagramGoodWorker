@@ -189,7 +189,7 @@ function startApplication( dom, body, ls ) {
 
     let list_group_item = dom.createElement( 'a' );
     list_group_item.setAttribute( 'class', 'list-group-item list-group-item-action' );
-    list_group_item.setAttribute( ':class', '{ "list-group-item-warning": status == "process" }' );
+    list_group_item.setAttribute( ':class', '{ "list-group-item-warning": status == "process", "list-group-item-success": status == "success", "list-group-item-danger": status == "failed" }' );
     list_group_item.setAttribute( ':href', 'url' );
     list_group_item.setAttribute( 'target', '_blank' );
     let thumbnail = dom.createElement( 'img' ); list_group_item.appendChild( thumbnail );
@@ -447,6 +447,7 @@ function startApplication( dom, body, ls ) {
                 if ( 'ok' == response.status ) {
                     task.task.status = 'success';
                     ls.setItem( 'igs', JSON.stringify( application.cards ) );
+                    setTimeout( tasker, rand( 1, 5 ) * 1000 );
                 }
             } catch ( e ) {
                 task.task.status = 'failed';
@@ -466,9 +467,8 @@ function startApplication( dom, body, ls ) {
                 case 'like':
                     sendLike( task );
                     break;
-            }
-            
-        }            
+            }            
+        } else tasker();
     };
 
     Vue.nextTick( () => {
@@ -493,4 +493,9 @@ function shuffle(a) {
         [a[i], a[j]] = [a[j], a[i]];
     }
     return a;
+}
+
+function rand( min, max ) {
+    return Math.floor(Math.random() * (max - min)) + min;
+
 }
