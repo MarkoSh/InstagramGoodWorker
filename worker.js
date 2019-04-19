@@ -60,6 +60,10 @@
             src         : '//cdnjs.cloudflare.com/ajax/libs/Swiper/4.5.0/js/swiper.min.js'
         }, {
             src			: '//cdn.jsdelivr.net/npm/vue/dist/vue.js',
+        }, {
+            src         : '//cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.13/sass.min.js'
+        }, {
+            src         : '//cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.13/sass.sync.min.js'
         } ];
     
         let index = 0;
@@ -128,6 +132,26 @@ function getCookie( name ) {
 
 function startApplication( dom, body, ls ) {
 
+    let scss = `
+        #tasks_list {
+            overflow: auto;
+            transition: .3s;
+            position: fixed;
+            top: 100px;
+            right: -210px;
+            bottom: 0px;
+            &:hover {
+                right: 0;
+            }
+        }
+    `;
+
+    Sass.compile( scss, ( result ) => {
+        let style = dom.createElement( 'style' );
+        style.innerHTML = result.text;
+        dom.head.appendChild( style );
+    } );
+
     let application_el = dom.createElement( 'div' );
     body.appendChild( application_el );
     application_el.id = 'application';
@@ -166,12 +190,7 @@ function startApplication( dom, body, ls ) {
 
     let tasks_list = dom.createElement( 'div' );
     tasks_list.classList.add( 'list-group' );
-    tasks_list.onmouseenter = e => {
-        debugger;
-    };
-    tasks_list.onmouseleave = e => {
-        debugger;
-    };
+    tasks_list.id = 'tasks_list';
     tasks_list.innerHTML = `
     <task v-for="task in tasks" :key="task.id" 
 
@@ -185,7 +204,6 @@ function startApplication( dom, body, ls ) {
     </task>
     `;
     application_el.appendChild( tasks_list );
-    tasks_list.setAttribute( 'style', 'position: fixed; top: 100px; right: 0px; bottom: 15px; overflow: auto;' );
 
     let list_group_item = dom.createElement( 'a' );
     list_group_item.setAttribute( 'class', 'list-group-item list-group-item-action' );
