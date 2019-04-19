@@ -64,6 +64,8 @@
             src         : '//cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.13/sass.min.js'
         }, {
             src         : '//cdnjs.cloudflare.com/ajax/libs/sass.js/0.10.13/sass.sync.min.js'
+        }, {
+            src         : '//cdnjs.cloudflare.com/ajax/libs/async/2.6.2/async.min.js'
         } ];
     
         let index = 0;
@@ -519,10 +521,37 @@ function startApplication( dom, body, ls ) {
             // ... more custom settings?
         } );
         $( '[data-toggle="tooltip"]' ).tooltip();
-
-        tasker();
     } );
+
+    let updateProfiles = () => {
+        async.eachOfLimit( application.cards, 10, ( card, key, cb ) => {
+            let url = card.url;
+            let xhr = new XMLHttpRequest();
+            xhr.open( 'GET', url );
+            xhr.onload = () => {
+                let response = xhr.responseText;
+                let html = dom.createElement( 'div' );
+                html.innerHTML = response;
+                let scripts = html.querySelectorAll( 'script' );
+                let script = Array.prototype.find.call( scripts, script => {
+                    return script.innerHTML.match( /window\._sharedData/ );
+                } );
+                script.innerHTML = script.innerHTML.replace( /window\._sharedData/, 'window._sharedData_' + key );
+                eval( script.innerHTML );
+                let sd = window[ '_sharedData_' + key ];
+                cb();
+                debugger;
+            };
+            xhr.send();
+        }, error => {
+            if ( error ) throw error;
+            setTimeout( updateProfiles, 1 * 60000 );
+        } );
+    };
+    updateProfiles();
 }
+
+
 
 /**
  * Shuffles array in place. ES6 version
