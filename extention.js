@@ -120,6 +120,86 @@
         background-position: -131px -146px;
         margin: 10px;
         ` );
+        comment_btn.onclick = e => {
+            e.preventDefault();
+            process = ! process;
+            if ( comment_btn.classList.contains( 'process' ) ) return true;
+            
+            let edges = false;
+            if ( is_profile() ) {
+                edges = sd.entry_data.ProfilePage[ "0" ].graphql.user.edge_owner_to_timeline_media.edges.map( edge => {
+                    return edge.node;
+                } );
+            }
+            if ( is_tag() ) {
+                edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
+                    return edge.node;
+                } );
+            }
+
+            comment_btn.classList.add( 'process' );
+            let deg = 0;
+            let animation = setInterval( () => {
+                comment_btn.style.transform = 'rotate( ' + deg + 'deg )';
+                deg = deg <= 360 ? deg + 6: 0;
+            }, 100 );
+
+            shuffle( edges );
+
+            let comments = [];
+            let getComment = () => {
+                let result = prompt( 'Введите комментарий' );
+                if ( result ) {
+                    comments.push( result ); 
+                    getComment();
+                } else return true;
+            };
+            getComment();
+
+            if ( edges && edges.length > 0 && comments.length > 0 ) {
+                let commenter = () => {
+                    if ( ! process ) {
+                        clearInterval( animation );
+                        comment_btn.classList.remove( 'process' );
+                        comment_btn.style.transform = '';
+                        document.title = 'Остановлено';
+                        return true;
+                    };
+                    if ( typeof commenter.i == 'undefined' ) commenter.i = 0;
+                    document.title = 'Работаем, ' + commenter.i + '/' + edges.length + '...';
+                    if ( commenter.i >= edges.length ) {
+                        clearInterval( animation );
+                        comment_btn.classList.remove( 'process' );
+                        comment_btn.style.transform = '';
+                        document.title = 'Завершено';
+                    } else {
+                        let edge = edges[ commenter.i ];
+                        let xhr = new XMLHttpRequest();
+                        xhr.open( 'POST', 'https://www.instagram.com/web/comments/' + edge.id + '/add/' );
+                        xhr.onload = () => {
+                            let response = xhr.responseText;
+                            try {
+                                response = JSON.parse( response );
+                                if ( 'ok' == response.status ) {
+                                    commenter.i++;
+                                    setTimeout( commenter, rand( 1, 5 ) * 10000 );
+                                }
+                            } catch ( e ) {
+                                setTimeout( commenter, rand( 1, 5 ) * 30000 );
+                            }
+                        };
+                        let comment = comments[ rand( 0, comments.length - 1 ) ];
+                        xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
+                        xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
+                        xhr.send( 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=' );
+                    }
+                };
+                commenter();
+            } else {
+                comment_btn.classList.remove( 'process' );
+            }
+            return true;
+        };
     };
     tools();
 
