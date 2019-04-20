@@ -40,22 +40,26 @@
         margin: 10px;
         ` );
         let process = false;
+        let edges = [];
+        if ( is_profile() ) {
+            edges = sd.entry_data.ProfilePage[ "0" ].graphql.user.edge_owner_to_timeline_media.edges.map( edge => {
+                return edge.node;
+            } );
+        }
+        if ( is_tag() ) {
+            edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
+                return edge.node;
+            } );
+        }
+        shuffle( edges );
+        
         like_btn.onclick = e => {
             e.preventDefault();
             process = ! process;
             if ( like_btn.classList.contains( 'process' ) ) return true;
             
-            let edges = false;
-            if ( is_profile() ) {
-                edges = sd.entry_data.ProfilePage[ "0" ].graphql.user.edge_owner_to_timeline_media.edges.map( edge => {
-                    return edge.node;
-                } );
-            }
-            if ( is_tag() ) {
-                edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
-                    return edge.node;
-                } );
-            }
+            
+            
 
             like_btn.classList.add( 'process' );
             let deg = 0;
@@ -64,7 +68,7 @@
                 deg = deg <= 360 ? deg + 6: 0;
             }, 100 );
 
-            shuffle( edges );
+            
             if ( edges && edges.length > 0 ) {
                 let liker = () => {
                     if ( ! process ) {
@@ -150,7 +154,8 @@
             let getComment = () => {
                 let result = prompt( 'Введите комментарий' );
                 if ( result ) {
-                    comments.push( result ); 
+                    result = result.split( "|" );
+                    comments = comments.concat( result ); 
                     getComment();
                 } else return true;
             };
@@ -181,10 +186,12 @@
                             try {
                                 response = JSON.parse( response );
                                 if ( 'ok' == response.status ) {
+                                    console.log( 'https://www.instagram.com/p/' + shortcode + '/' );
                                     commenter.i++;
                                     setTimeout( commenter, rand( 1, 5 ) * 10000 );
                                 }
                             } catch ( e ) {
+                                document.title = 'Блокировка, ждем, ' + commenter.i + '/' + edges.length + '...';
                                 setTimeout( commenter, rand( 1, 5 ) * 30000 );
                             }
                         };
@@ -196,7 +203,10 @@
                 };
                 commenter();
             } else {
+                clearInterval( animation );
                 comment_btn.classList.remove( 'process' );
+                comment_btn.style.transform = '';
+                document.title = 'Остановлено';
             }
             return true;
         };
