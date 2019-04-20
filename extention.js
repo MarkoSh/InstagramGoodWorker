@@ -12,6 +12,9 @@
 
     'use strict';
 
+    let like_url    = 'https://www.instagram.com/web/likes/%id%/like/';
+    let comment_url = 'https://www.instagram.com/web/comments/%id%/add/';
+
     let is_profile = () => {
         return sd.entry_data.hasOwnProperty( 'ProfilePage' );
     };
@@ -19,200 +22,182 @@
         return sd.entry_data.hasOwnProperty( 'TagPage' );
     };
 
-    let tools = () => {
-        let container = dom.createElement( 'div' );
-        container.setAttribute( 'style', `
-        position: fixed;
-        top: 100px;
-        right: 100px;
-        ` );
-        body.appendChild( container );
-
-        let like_btn = dom.createElement( 'a' );
-        container.appendChild( like_btn );
-        like_btn.setAttribute( 'href', '#' );
-        like_btn.setAttribute( 'style', `
-        width: 24px;
-        height: 24px;
-        display: block;
-        background-image: url(/static/bundles/es6/sprite_glyphs_61393e2520c3.png/61393e2520c3.png);
-        background-position: -78px -203px;
-        margin: 10px;
-        ` );
-        let process = false;
-        let edges = [];
+    if ( is_profile() || is_tag() ) {
+        let edges       = [];
+        let liked       = ls.getItem( 'liked' ) ? JSON.parse( ls.getItem( 'liked' ) ) : [];
+        let commented   = ls.getItem( 'commented' ) ? JSON.parse( ls.getItem( 'commented' ) ) : [];
         if ( is_profile() ) {
             edges = sd.entry_data.ProfilePage[ "0" ].graphql.user.edge_owner_to_timeline_media.edges.map( edge => {
                 return edge.node;
             } );
         }
         if ( is_tag() ) {
-            edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
+            edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_top_posts.edges.map( edge => {
                 return edge.node;
             } );
+            edges = edges.concat( sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
+                return edge.node;
+            } ) );
         }
-        shuffle( edges );
-        
-        like_btn.onclick = e => {
-            e.preventDefault();
-            process = ! process;
-            if ( like_btn.classList.contains( 'process' ) ) return true;
-            
-            
-            
 
-            like_btn.classList.add( 'process' );
-            let deg = 0;
-            let animation = setInterval( () => {
-                like_btn.style.transform = 'rotate( ' + deg + 'deg )';
-                deg = deg <= 360 ? deg + 6: 0;
-            }, 100 );
-
-            
-            if ( edges && edges.length > 0 ) {
-                let liker = () => {
-                    if ( ! process ) {
-                        clearInterval( animation );
-                        like_btn.classList.remove( 'process' );
-                        like_btn.style.transform = '';
-                        document.title = 'Остановлено';
-                        return true;
-                    };
-                    if ( typeof liker.i == 'undefined' ) liker.i = 0;
-                    document.title = 'Работаем, ' + liker.i + '/' + edges.length + '...';
-                    if ( liker.i >= edges.length ) {
-                        clearInterval( animation );
-                        like_btn.classList.remove( 'process' );
-                        like_btn.style.transform = '';
-                        document.title = 'Завершено';
-                    } else {
-                        let edge = edges[ liker.i ];
-                        let xhr = new XMLHttpRequest();
-                        xhr.open( 'POST', 'https://www.instagram.com/web/likes/' + edge.id + '/like/' );
-                        xhr.onload = () => {
-                            let response = xhr.responseText;
-                            try {
-                                response = JSON.parse( response );
-                                if ( 'ok' == response.status ) {
-                                    liker.i++;
-                                    setTimeout( liker, rand( 1, 5 ) * 1000 );
-                                }
-                            } catch ( e ) {
-                                setTimeout( liker, rand( 1, 5 ) * 10000 );
-                            }
-                        };
-                        xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
-                        xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
-                        xhr.send();
+        let container = dom.createElement( 'div' );
+            container.setAttribute( 'style', `
+            position: fixed;
+            top: 100px;
+            right: 100px;
+            ` );
+            body.appendChild( container );
+    
+            let like_btn = dom.createElement( 'a' );
+            container.appendChild( like_btn );
+            like_btn.setAttribute( 'href', '#' );
+            like_btn.setAttribute( 'style', `
+            width: 24px;
+            height: 24px;
+            display: block;
+            background-image: url(/static/bundles/es6/sprite_glyphs_61393e2520c3.png/61393e2520c3.png);
+            background-position: -78px -203px;
+            margin: 10px;
+            ` );
+    
+            like_btn.onclick = e => {
+                e.preventDefault();
+                dom.dispatchEvent( new CustomEvent( 'justDoIt', {
+                    detail: {
+                        element : like_btn,
+                        mode    : 'like'
                     }
-                };
-                liker();
-            } else {
-                like_btn.classList.remove( 'process' );
-            }
-            return true;
-        };
-
-        let comment_btn = dom.createElement( 'a' );
-        container.appendChild( comment_btn );
-        comment_btn.setAttribute( 'href', '#' );
-        comment_btn.setAttribute( 'style', `
-        width: 24px;
-        height: 24px;
-        display: block;
-        background-image: url(/static/bundles/es6/sprite_glyphs_61393e2520c3.png/61393e2520c3.png);
-        background-position: -131px -146px;
-        margin: 10px;
-        ` );
-        comment_btn.onclick = e => {
-            e.preventDefault();
-            process = ! process;
-            if ( comment_btn.classList.contains( 'process' ) ) return true;
-            
-            let edges = false;
-            if ( is_profile() ) {
-                edges = sd.entry_data.ProfilePage[ "0" ].graphql.user.edge_owner_to_timeline_media.edges.map( edge => {
-                    return edge.node;
-                } );
-            }
-            if ( is_tag() ) {
-                edges = sd.entry_data.TagPage[ "0" ].graphql.hashtag.edge_hashtag_to_media.edges.map( edge => {
-                    return edge.node;
-                } );
-            }
-
-            comment_btn.classList.add( 'process' );
-            let deg = 0;
-            let animation = setInterval( () => {
-                comment_btn.style.transform = 'rotate( ' + deg + 'deg )';
-                deg = deg <= 360 ? deg + 6: 0;
-            }, 100 );
-
-            shuffle( edges );
-
-            let comments = [];
-            let getComment = () => {
-                let result = prompt( 'Введите комментарий' );
-                if ( result ) {
-                    result = result.split( "|" );
-                    comments = comments.concat( result ); 
-                    getComment();
-                } else return true;
+                } ) );
+                return true;
             };
-            getComment();
-
-            if ( edges && edges.length > 0 && comments.length > 0 ) {
-                let commenter = () => {
-                    if ( ! process ) {
-                        clearInterval( animation );
-                        comment_btn.classList.remove( 'process' );
-                        comment_btn.style.transform = '';
-                        document.title = 'Остановлено';
-                        return true;
-                    };
-                    if ( typeof commenter.i == 'undefined' ) commenter.i = 0;
-                    document.title = 'Работаем, ' + commenter.i + '/' + edges.length + '...';
-                    if ( commenter.i >= edges.length ) {
-                        clearInterval( animation );
-                        comment_btn.classList.remove( 'process' );
-                        comment_btn.style.transform = '';
-                        document.title = 'Завершено';
-                    } else {
-                        let edge = edges[ commenter.i ];
-                        let xhr = new XMLHttpRequest();
-                        xhr.open( 'POST', 'https://www.instagram.com/web/comments/' + edge.id + '/add/' );
-                        xhr.onload = () => {
-                            let response = xhr.responseText;
-                            try {
-                                response = JSON.parse( response );
-                                if ( 'ok' == response.status ) {
-                                    console.log( 'https://www.instagram.com/p/' + shortcode + '/' );
-                                    commenter.i++;
-                                    setTimeout( commenter, rand( 1, 5 ) * 10000 );
-                                }
-                            } catch ( e ) {
-                                document.title = 'Блокировка, ждем, ' + commenter.i + '/' + edges.length + '...';
-                                setTimeout( commenter, rand( 1, 5 ) * 30000 );
-                            }
-                        };
-                        let comment = comments[ rand( 0, comments.length - 1 ) ];
-                        xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
-                        xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
-                        xhr.send( 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=' );
+    
+            let comment_btn = dom.createElement( 'a' );
+            container.appendChild( comment_btn );
+            comment_btn.setAttribute( 'href', '#' );
+            comment_btn.setAttribute( 'style', `
+            width: 24px;
+            height: 24px;
+            display: block;
+            background-image: url(/static/bundles/es6/sprite_glyphs_61393e2520c3.png/61393e2520c3.png);
+            background-position: -131px -146px;
+            margin: 10px;
+            ` );
+            comment_btn.onclick = e => {
+                e.preventDefault();
+                dom.dispatchEvent( new CustomEvent( 'justDoIt', {
+                    detail: {
+                        element : comment_btn,
+                        mode    : 'comment'
                     }
-                };
-                commenter();
-            } else {
-                clearInterval( animation );
-                comment_btn.classList.remove( 'process' );
-                comment_btn.style.transform = '';
-                document.title = 'Остановлено';
-            }
-            return true;
-        };
-    };
-    tools();
+                } ) );
+                return true;
+            };
 
+            let title = {};
+
+            dom.addEventListener( 'justDoIt', e => {
+                let element = e.detail.element;
+                element.remove();
+                let titleProcess = () => {
+                    let title_text = [];
+                    Object.keys( title ).forEach( key => {
+                        title_text.push( title[ key ].mode + ' - ' + title[ key ].text );
+                    } );
+                    dom.title = title_text.join( ' :: ' );
+                };
+                let request = ( id, data, url, cb, edge ) => {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open( 'POST', url.replace( /%id%/, id ) );
+                    xhr.onload = () => {
+                        let response = xhr.responseText;
+                        try {
+                            response = JSON.parse( response );
+                            if ( 'ok' == response.status ) {
+                                console.log( 'https://www.instagram.com/p/' + edge.shortcode + '/' );
+                                setTimeout( cb, rand( 1, 5 ) * 1000 );
+                            }
+                        } catch ( e ) {
+                            console.error( 'https://www.instagram.com/p/' + edge.shortcode + '/' );
+                            setTimeout( cb, rand( 1, 5 ) * 10000 );
+                        }
+                    };
+                    xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
+                    xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
+                    xhr.send( data );
+                };
+                switch ( e.detail.mode ) {
+                    case 'like':
+                        edges = edges.filter( edge => {
+                            return liked.indexOf( edge.id ) < 0;
+                        } );
+                        if ( edges.length > 0 ) {
+                            title[ 'like' ] = {
+                                text: 'В процессе: 0/' + edges.length,
+                                mode: 'Лайкинг'
+                            };
+                            shuffle( edges );
+                            let func = () => {
+                                if ( typeof func.i == 'undefined' ) func.i = 0;
+                                if ( func.i < edges.length ) {
+                                    title.like.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                    let edge = edges[ func.i++ ];                                    
+                                    request( edge.id, null, like_url, () => {
+                                        liked.push( edge.id );
+                                        ls.setItem( 'liked', JSON.stringify( liked ) );
+                                        func();
+                                    }, edge );
+                                } else {
+                                    title.like.text = 'Завершено: ' + func.i + '/' + edges.length;
+                                }
+                                titleProcess();
+                            };
+                            func();
+                        }
+                    break;
+                    case 'comment':
+                        edges = edges.filter( edge => {
+                            return commented.indexOf( edge.id ) < 0;
+                        } );
+                        if ( edges.length > 0 ) {
+                            let comments = [];
+                            let getComment = () => {
+                                let result = prompt( 'Введите комментарий' );
+                                if ( result ) {
+                                    result = result.split( "|" );
+                                    comments = comments.concat( result );
+                                    getComment();
+                                } else return true;
+                            };
+                            getComment();
+                            title[ 'comment' ] = {
+                                text: 'В процессе: 0/' + edges.length,
+                                mode: 'Комментинг'
+                            };
+                            shuffle( edges );
+                            let func = () => {
+                                if ( typeof func.i == 'undefined' ) func.i = 0;
+                                if ( func.i < edges.length ) {
+                                    title.comment.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                    let edge = edges[ func.i++ ];
+                                    let comment = comments[ rand( 0, comments.length - 1 ) ];
+                                    request( edge.id, 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=', comment_url, () => {
+                                        commented.push( edge.id );
+                                        ls.setItem( 'commented', JSON.stringify( commented ) );
+                                        func();
+                                    }, edge );
+                                } else {
+                                    title.comment.text = 'Завершено: ' + func.i + '/' + edges.length;
+                                }
+                                titleProcess();
+                            };
+                            func();
+                        }
+                    break;
+                }
+            } );
+        
+                  
+    }
 
 } )( window._sharedData, document, document.body, localStorage );
 
