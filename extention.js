@@ -99,25 +99,6 @@
             let title = {};
 
             dom.addEventListener( 'justDoIt', e => {
-                let notification = false;
-                if ( ! ( "Notification" in window ) ) {
-                    alert( "Этот браузер не поддерживает уведомления" );
-                } else {
-                    let options = {
-                        body: 'Начинаю работу',
-                        icon: 'https://scontent-arn2-1.cdninstagram.com/vp/30138339ca6b3e92a97a9f72be93ae96/5D430127/t51.2885-19/s150x150/53088415_255898045341233_1126425219997630464_n.jpg?_nc_ht=scontent-arn2-1.cdninstagram.com'
-                    };
-                    if ( Notification.permission === "granted" ) {
-                        notification = new Notification( 'Приступаю', options );
-                    } else {
-                        Notification.requestPermission( permission => {
-                            // Если пользователь разрешил, то создаем уведомление 
-                            if ( permission === "granted" ) {
-                                notification = new Notification( 'Приступаю', options );
-                            }
-                        });
-                    }
-                }
                 let element = e.detail.element;
                 element.remove();
                 let titleProcess = () => {
@@ -179,7 +160,6 @@
                                     }, edge );
                                 } else {
                                     title.like.text = 'Завершено: ' + func.i + '/' + edges.length;
-                                    notification = new Notification( 'Завершено' );
                                 }
                                 titleProcess();
                             };
@@ -243,7 +223,58 @@
         let owner_comments  = edges.filter( edge => {
             return edge.owner.id == owner.id;
         } );
-        debugger;
+        let container = dom.createElement( 'div' );
+        container.setAttribute( 'style', `
+        position: fixed;
+        top: 100px;
+        right: 100px;
+        ` );
+        body.appendChild( container );
+
+        let like_btn = dom.createElement( 'a' );
+        container.appendChild( like_btn );
+        like_btn.setAttribute( 'href', '#' );
+        like_btn.setAttribute( 'style', `
+        width: 24px;
+        height: 24px;
+        display: block;
+        background: url(` + owner.profile_pic_url + `) center no-repeat / contain;
+        margin: 10px;
+        ` );
+
+        like_btn.onclick = e => {
+            e.preventDefault();
+            dom.dispatchEvent( new CustomEvent( 'justDoIt', {
+                detail: {
+                    element : like_btn,
+                    mode    : 'owner'
+                }
+            } ) );
+            return true;
+        };
+
+        let like_btn_ = dom.createElement( 'a' );
+        container.appendChild( like_btn_ );
+        like_btn_.setAttribute( 'href', '#' );
+        like_btn_.setAttribute( 'style', `
+        width: 24px;
+        height: 24px;
+        display: block;
+        background-image: url(/static/bundles/es6/sprite_glyphs_61393e2520c3.png/61393e2520c3.png);
+        background-position: -78px -203px;
+        margin: 10px;
+        ` );
+
+        like_btn_.onclick = e => {
+            e.preventDefault();
+            dom.dispatchEvent( new CustomEvent( 'justDoIt', {
+                detail: {
+                    element : like_btn_,
+                    mode    : 'all'
+                }
+            } ) );
+            return true;
+        };
     }
 
 } )( window._sharedData, document, document.body, localStorage );
