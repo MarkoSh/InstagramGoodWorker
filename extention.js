@@ -239,6 +239,7 @@
         height: 24px;
         display: block;
         background: url(` + owner.profile_pic_url + `) center no-repeat / contain;
+        border-radius: 100%;
         margin: 10px;
         ` );
 
