@@ -21,6 +21,9 @@
     let is_tag = () => {
         return sd.entry_data.hasOwnProperty( 'TagPage' );
     };
+    let is_post = () => {
+        return sd.entry_data.hasOwnProperty( 'PostPage' );
+    };
 
     if ( is_profile() || is_tag() ) {
         let edges       = [];
@@ -228,6 +231,19 @@
             } );
         
                   
+    }
+
+    if ( is_post() ) {
+        let edges           = [];
+        let liked_comments  = ls.getItem( 'liked_comments' ) ? JSON.parse( ls.getItem( 'liked_comments' ) ) : [];
+        let owner           = sd.entry_data.PostPage[ "0" ].graphql.shortcode_media.owner;
+        edges = sd.entry_data.PostPage[ "0" ].graphql.shortcode_media.edge_media_to_parent_comment.edges.map( edge => {
+            return edge.node;
+        } );
+        let owner_comments  = edges.filter( edge => {
+            return edge.owner.id == owner.id;
+        } );
+        debugger;
     }
 
 } )( window._sharedData, document, document.body, localStorage );
