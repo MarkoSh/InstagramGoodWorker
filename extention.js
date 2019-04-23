@@ -220,9 +220,13 @@
         let owner           = sd.entry_data.PostPage[ "0" ].graphql.shortcode_media.owner;
         edges = sd.entry_data.PostPage[ "0" ].graphql.shortcode_media.edge_media_to_parent_comment.edges.map( edge => {
             return edge.node;
+        } ).filter( edge => {
+            return liked_comments.indexOf( edge.id ) < 0;
         } );
         let owner_comments  = edges.filter( edge => {
             return edge.owner.id == owner.id;
+        } ).filter( edge => {
+            return liked_comments.indexOf( edge.id ) < 0;
         } );
         let container = dom.createElement( 'div' );
         container.setAttribute( 'style', `
@@ -298,8 +302,9 @@
                     try {
                         response = JSON.parse( response );
                         if ( 'ok' == response.status || 'fail' == response.status ) {
-                            if ( response.message ) console.log( 'Текст ответа ' + response.message );
-                            setTimeout( cb, rand( 1, 5 ) * 1000 );
+                            if ( response.message ) console.warn( 'Текст ответа ' + response.message );
+                            console.log( 'Помечен комментарий ' + id + ', текст: ' + edge.text );
+                            setTimeout( cb, rand( 10, 50 ) * 1000 );
                         }
                     } catch ( e ) {
                         if ( 400 == xhr.status ) {
@@ -307,7 +312,7 @@
                         } else {
                             setTimeout( () => {
                                 request( id, data, url, cb, edge );
-                            }, rand( 30, 60 ) * 1000 );
+                            }, rand( 10, 50 ) * 10000 );
                         }
                         
                     }
