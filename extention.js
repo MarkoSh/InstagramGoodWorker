@@ -12,8 +12,9 @@
 
     'use strict';
 
-    let like_url    = 'https://www.instagram.com/web/likes/%id%/like/';
-    let comment_url = 'https://www.instagram.com/web/comments/%id%/add/';
+    let like_url            = 'https://www.instagram.com/web/likes/%id%/like/';
+    let comment_url         = 'https://www.instagram.com/web/comments/%id%/add/';
+    let comment_like_url    = 'https://www.instagram.com/web/comments/like/%id%/';
 
     let is_profile = () => {
         return sd.entry_data.hasOwnProperty( 'ProfilePage' );
@@ -132,7 +133,7 @@
                             
                         }
                     };
-                    xhr.setRequestHeader( 'content-type', 'application/x-www-form-urlencoded' );
+                    xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
                     xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
                     xhr.send( data );
                 };
@@ -276,6 +277,100 @@
             } ) );
             return true;
         };
+
+        let title = {};
+
+        dom.addEventListener( 'justDoIt', e => {
+            let element = e.detail.element;
+            element.remove();
+            let titleProcess = () => {
+                let title_text = [];
+                Object.keys( title ).forEach( key => {
+                    title_text.push( title[ key ].mode + ' - ' + title[ key ].text );
+                } );
+                dom.title = title_text.join( ' :: ' );
+            };
+            let request = ( id, data, url, cb, edge ) => {
+                let xhr = new XMLHttpRequest();
+                xhr.open( 'POST', url.replace( /%id%/, id ) );
+                xhr.onload = () => {
+                    let response = xhr.responseText;
+                    try {
+                        response = JSON.parse( response );
+                        if ( 'ok' == response.status || 'fail' == response.status ) {
+                            if ( response.message ) console.log( 'Текст ответа ' + response.message );
+                            setTimeout( cb, rand( 1, 5 ) * 1000 );
+                        }
+                    } catch ( e ) {
+                        if ( 400 == xhr.status ) {
+                            cb();
+                        } else {
+                            setTimeout( () => {
+                                request( id, data, url, cb, edge );
+                            }, rand( 30, 60 ) * 1000 );
+                        }
+                        
+                    }
+                };
+                xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+                xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
+                xhr.send( data );
+            };
+            switch ( e.detail.mode ) {
+                case 'owner':
+                    if ( owner_comments.length > 0 ) {
+                        title[ 'owner' ] = {
+                            text: 'В процессе: 0/' + owner_comments.length,
+                            mode: 'Лайкинг владельца'
+                        };
+                        shuffle( owner_comments );
+                        let func = () => {
+                            if ( typeof func.i == 'undefined' ) func.i = 0;
+                            if ( func.i < owner_comments.length ) {
+                                title.owner.text = 'В процессе: ' + func.i + '/' + owner_comments.length;
+                                let edge = owner_comments[ func.i ];                                    
+                                request( edge.id, null, comment_like_url, () => {
+                                    func.i++;
+                                    liked_comments.push( edge.id );
+                                    ls.setItem( 'liked_comments', JSON.stringify( liked_comments ) );
+                                    func();
+                                }, edge );
+                            } else {
+                                title.owner.text = 'Завершено: ' + func.i + '/' + owner_comments.length;
+                            }
+                            titleProcess();
+                        };
+                        func();
+                    }
+                break;
+                case 'all':
+                    if ( edges.length > 0 ) {
+                        title[ 'all' ] = {
+                            text: 'В процессе: 0/' + edges.length,
+                            mode: 'Лайкинг всех'
+                        };
+                        shuffle( edges );
+                        let func = () => {
+                            if ( typeof func.i == 'undefined' ) func.i = 0;
+                            if ( func.i < edges.length ) {
+                                title.all.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                let edge = edges[ func.i ];                                    
+                                request( edge.id, null, comment_like_url, () => {
+                                    func.i++;
+                                    liked_comments.push( edge.id );
+                                    ls.setItem( 'liked_comments', JSON.stringify( liked_comments ) );
+                                    func();
+                                }, edge );
+                            } else {
+                                title.all.text = 'Завершено: ' + func.i + '/' + edges.length;
+                            }
+                            titleProcess();
+                        };
+                        func();
+                    }
+                break;
+            }
+        } );
     }
 
 } )( window._sharedData, document, document.body, localStorage );
