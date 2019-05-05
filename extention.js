@@ -8,6 +8,15 @@
 // @grant        none
 // ==/UserScript==
 
+let LIKE_INTERVAL = {
+    min: 1,
+    max: 5
+};
+let RELIKE_INTERVAL = {
+    min: 10,
+    max: 50
+};
+
 ( ( sd, dom, body, ls ) => {
 
     'use strict';
@@ -119,7 +128,7 @@
                             response = JSON.parse( response );
                             if ( 'ok' == response.status ) {
                                 console.log( post_url );
-                                setTimeout( cb, rand( 5, 10 ) * 10000 );
+                                setTimeout( cb, rand( LIKE_INTERVAL.min, LIKE_INTERVAL.max ) * 10000 );
                             }
                         } catch ( e ) {
                             console.error( post_url );
@@ -128,7 +137,7 @@
                             } else {
                                 setTimeout( () => {
                                     request( id, data, url, cb, edge );
-                                }, rand( 10, 20 ) * 10000 );
+                                }, rand( RELIKE_INTERVAL.min, RELIKE_INTERVAL.max ) * 10000 );
                             }
                             
                         }
@@ -304,7 +313,7 @@
                         if ( 'ok' == response.status || 'fail' == response.status ) {
                             if ( response.message ) console.warn( 'Текст ответа ' + response.message );
                             console.log( 'Помечен комментарий ' + id + ', текст: ' + edge.text );
-                            setTimeout( cb, rand( 10, 50 ) * 1000 );
+                            setTimeout( cb, rand( LIKE_INTERVAL.min, LIKE_INTERVAL.max ) * 1000 );
                         }
                     } catch ( e ) {
                         if ( 400 == xhr.status ) {
@@ -312,7 +321,7 @@
                         } else {
                             setTimeout( () => {
                                 request( id, data, url, cb, edge );
-                            }, rand( 10, 50 ) * 10000 );
+                            }, rand( RELIKE_INTERVAL.min, RELIKE_INTERVAL.max ) * 10000 );
                         }
                         
                     }
