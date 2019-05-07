@@ -183,38 +183,49 @@ let RELIKE_INTERVAL = {
                         if ( edges.length > 0 ) {
                             let comments = [];
                             let getComment = () => {
-                                let result = prompt( 'Введите комментарий' );
-                                if ( result ) {
-                                    result = result.split( "|" );
-                                    comments = comments.concat( result );
-                                    getComment();
-                                } else return true;
-                            };
-                            getComment();
-                            if ( comments.length > 0 ) {
-                                title[ 'comment' ] = {
-                                    text: 'В процессе: 0/' + edges.length,
-                                    mode: 'Комментинг'
-                                };
-                                shuffle( edges );
-                                let func = () => {
-                                    if ( typeof func.i == 'undefined' ) func.i = 0;
-                                    if ( func.i < edges.length ) {
-                                        title.comment.text = 'В процессе: ' + func.i + '/' + edges.length;
-                                        let edge = edges[ func.i++ ];
-                                        let comment = comments[ rand( 0, comments.length - 1 ) ];
-                                        request( edge.id, 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=', comment_url, () => {
-                                            commented.push( edge.id );
-                                            ls.setItem( 'commented', JSON.stringify( commented ) );
-                                            func();
-                                        }, edge );
-                                    } else {
-                                        title.comment.text = 'Завершено: ' + func.i + '/' + edges.length;
+                                let input = dom.createElement( 'input' );
+                                input.type = 'file';
+                                input.accept = 'text/plain';
+                                input.click();
+                                input.onchange = e => {
+                                    let file = input.files[ 0 ];
+                                    let reader = new FileReader();
+                                    reader.readAsText( file, 'UTF-8' );
+                                    reader.onload = e => {
+                                        let text = e.target.result;
+                                        if ( text ) {
+                                            comments = text.split( "\n" ).filter( line => {
+                                                return line.length > 0;
+                                            } );
+                                            if ( comments.length > 0 ) {
+                                                title[ 'comment' ] = {
+                                                    text: 'В процессе: 0/' + edges.length,
+                                                    mode: 'Комментинг'
+                                                };
+                                                shuffle( edges );
+                                                let func = () => {
+                                                    if ( typeof func.i == 'undefined' ) func.i = 0;
+                                                    if ( func.i < edges.length ) {
+                                                        title.comment.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                                        let edge = edges[ func.i++ ];
+                                                        let comment = comments[ rand( 0, comments.length - 1 ) ];
+                                                        request( edge.id, 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=', comment_url, () => {
+                                                            commented.push( edge.id );
+                                                            ls.setItem( 'commented', JSON.stringify( commented ) );
+                                                            func();
+                                                        }, edge );
+                                                    } else {
+                                                        title.comment.text = 'Завершено: ' + func.i + '/' + edges.length;
+                                                    }
+                                                    titleProcess();
+                                                };
+                                                func();
+                                            }
+                                        }
                                     }
-                                    titleProcess();
                                 };
-                                func();
-                            }                            
+                            };
+                            getComment();                     
                         }
                     break;
                 }
