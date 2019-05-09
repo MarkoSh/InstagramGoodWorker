@@ -106,132 +106,130 @@ let RELIKE_INTERVAL = {
                 return true;
             };
 
-            let title = {};
+        let title = {};
 
-            dom.addEventListener( 'justDoIt', e => {
-                let element = e.detail.element;
-                element.remove();
-                let titleProcess = () => {
-                    let title_text = [];
-                    Object.keys( title ).forEach( key => {
-                        title_text.push( title[ key ].mode + ' - ' + title[ key ].text );
+        dom.addEventListener( 'justDoIt', e => {
+            let element = e.detail.element;
+            element.remove();
+            let titleProcess = () => {
+                let title_text = [];
+                Object.keys( title ).forEach( key => {
+                    title_text.push( title[ key ].mode + ' - ' + title[ key ].text );
+                } );
+                dom.title = title_text.join( ' :: ' );
+            };
+            let request = ( id, data, url, cb, edge ) => {
+                let xhr = new XMLHttpRequest();
+                xhr.open( 'POST', url.replace( /%id%/, id ) );
+                xhr.onload = () => {
+                    let response = xhr.responseText;
+                    let post_url = 'https://www.instagram.com/p/' + edge.shortcode + '/';
+                    try {
+                        response = JSON.parse( response );
+                        if ( 'ok' == response.status ) {
+                            console.log( post_url );
+                            setTimeout( cb, rand( LIKE_INTERVAL.min, LIKE_INTERVAL.max ) * 10000 );
+                        }
+                    } catch ( e ) {
+                        console.error( post_url );
+                        if ( 400 == xhr.status ) {
+                            cb();
+                        } else {
+                            setTimeout( () => {
+                                request( id, data, url, cb, edge );
+                            }, rand( RELIKE_INTERVAL.min, RELIKE_INTERVAL.max ) * 10000 );
+                        }
+                        
+                    }
+                };
+                xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
+                xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
+                xhr.send( data );
+            };
+            switch ( e.detail.mode ) {
+                case 'like':
+                    edges = edges.filter( edge => {
+                        return liked.indexOf( edge.id ) < 0;
                     } );
-                    dom.title = title_text.join( ' :: ' );
-                };
-                let request = ( id, data, url, cb, edge ) => {
-                    let xhr = new XMLHttpRequest();
-                    xhr.open( 'POST', url.replace( /%id%/, id ) );
-                    xhr.onload = () => {
-                        let response = xhr.responseText;
-                        let post_url = 'https://www.instagram.com/p/' + edge.shortcode + '/';
-                        try {
-                            response = JSON.parse( response );
-                            if ( 'ok' == response.status ) {
-                                console.log( post_url );
-                                setTimeout( cb, rand( LIKE_INTERVAL.min, LIKE_INTERVAL.max ) * 10000 );
-                            }
-                        } catch ( e ) {
-                            console.error( post_url );
-                            if ( 400 == xhr.status ) {
-                                cb();
+                    if ( edges.length > 0 ) {
+                        title[ 'like' ] = {
+                            text: 'В процессе: 0/' + edges.length,
+                            mode: 'Лайкинг'
+                        };
+                        shuffle( edges );
+                        let func = () => {
+                            if ( typeof func.i == 'undefined' ) func.i = 0;
+                            if ( func.i < edges.length ) {
+                                title.like.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                let edge = edges[ func.i ];                                    
+                                request( edge.id, null, like_url, () => {
+                                    func.i++;
+                                    liked.push( edge.id );
+                                    ls.setItem( 'liked', JSON.stringify( liked ) );
+                                    func();
+                                }, edge );
                             } else {
-                                setTimeout( () => {
-                                    request( id, data, url, cb, edge );
-                                }, rand( RELIKE_INTERVAL.min, RELIKE_INTERVAL.max ) * 10000 );
+                                title.like.text = 'Завершено: ' + func.i + '/' + edges.length;
                             }
-                            
-                        }
-                    };
-                    xhr.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded' );
-                    xhr.setRequestHeader( 'x-csrftoken', getCookie( 'csrftoken' ) );
-                    xhr.send( data );
-                };
-                switch ( e.detail.mode ) {
-                    case 'like':
-                        edges = edges.filter( edge => {
-                            return liked.indexOf( edge.id ) < 0;
-                        } );
-                        if ( edges.length > 0 ) {
-                            title[ 'like' ] = {
-                                text: 'В процессе: 0/' + edges.length,
-                                mode: 'Лайкинг'
-                            };
-                            shuffle( edges );
-                            let func = () => {
-                                if ( typeof func.i == 'undefined' ) func.i = 0;
-                                if ( func.i < edges.length ) {
-                                    title.like.text = 'В процессе: ' + func.i + '/' + edges.length;
-                                    let edge = edges[ func.i ];                                    
-                                    request( edge.id, null, like_url, () => {
-                                        func.i++;
-                                        liked.push( edge.id );
-                                        ls.setItem( 'liked', JSON.stringify( liked ) );
-                                        func();
-                                    }, edge );
-                                } else {
-                                    title.like.text = 'Завершено: ' + func.i + '/' + edges.length;
-                                }
-                                titleProcess();
-                            };
-                            func();
-                        }
-                    break;
-                    case 'comment':
-                        edges = edges.filter( edge => {
-                            return commented.indexOf( edge.id ) < 0;
-                        } );
-                        if ( edges.length > 0 ) {
-                            let comments = [];
-                            let getComment = () => {
-                                let input = dom.createElement( 'input' );
-                                input.type = 'file';
-                                input.accept = 'text/plain';
-                                input.click();
-                                input.onchange = e => {
-                                    let file = input.files[ 0 ];
-                                    let reader = new FileReader();
-                                    reader.readAsText( file, 'UTF-8' );
-                                    reader.onload = e => {
-                                        let text = e.target.result;
-                                        if ( text ) {
-                                            comments = text.split( "\n" ).filter( line => {
-                                                return line.length > 0;
-                                            } );
-                                            if ( comments.length > 0 ) {
-                                                title[ 'comment' ] = {
-                                                    text: 'В процессе: 0/' + edges.length,
-                                                    mode: 'Комментинг'
-                                                };
-                                                shuffle( edges );
-                                                let func = () => {
-                                                    if ( typeof func.i == 'undefined' ) func.i = 0;
-                                                    if ( func.i < edges.length ) {
-                                                        title.comment.text = 'В процессе: ' + func.i + '/' + edges.length;
-                                                        let edge = edges[ func.i++ ];
-                                                        let comment = comments[ rand( 0, comments.length - 1 ) ];
-                                                        request( edge.id, 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=', comment_url, () => {
-                                                            commented.push( edge.id );
-                                                            ls.setItem( 'commented', JSON.stringify( commented ) );
-                                                            func();
-                                                        }, edge );
-                                                    } else {
-                                                        title.comment.text = 'Завершено: ' + func.i + '/' + edges.length;
-                                                    }
-                                                    titleProcess();
-                                                };
-                                                func();
-                                            }
+                            titleProcess();
+                        };
+                        func();
+                    }
+                break;
+                case 'comment':
+                    edges = edges.filter( edge => {
+                        return commented.indexOf( edge.id ) < 0;
+                    } );
+                    if ( edges.length > 0 ) {
+                        let comments = [];
+                        let getComment = () => {
+                            let input = dom.createElement( 'input' );
+                            input.type = 'file';
+                            input.accept = 'text/plain';
+                            input.click();
+                            input.onchange = e => {
+                                let file = input.files[ 0 ];
+                                let reader = new FileReader();
+                                reader.readAsText( file, 'UTF-8' );
+                                reader.onload = e => {
+                                    let text = e.target.result;
+                                    if ( text ) {
+                                        comments = text.split( "\n" ).filter( line => {
+                                            return line.length > 0;
+                                        } );
+                                        if ( comments.length > 0 ) {
+                                            title[ 'comment' ] = {
+                                                text: 'В процессе: 0/' + edges.length,
+                                                mode: 'Комментинг'
+                                            };
+                                            shuffle( edges );
+                                            let func = () => {
+                                                if ( typeof func.i == 'undefined' ) func.i = 0;
+                                                if ( func.i < edges.length ) {
+                                                    title.comment.text = 'В процессе: ' + func.i + '/' + edges.length;
+                                                    let edge = edges[ func.i++ ];
+                                                    let comment = comments[ rand( 0, comments.length - 1 ) ];
+                                                    request( edge.id, 'comment_text=' + encodeURI( comment ) + '&replied_to_comment_id=', comment_url, () => {
+                                                        commented.push( edge.id );
+                                                        ls.setItem( 'commented', JSON.stringify( commented ) );
+                                                        func();
+                                                    }, edge );
+                                                } else {
+                                                    title.comment.text = 'Завершено: ' + func.i + '/' + edges.length;
+                                                }
+                                                titleProcess();
+                                            };
+                                            func();
                                         }
                                     }
-                                };
+                                }
                             };
-                            getComment();                     
-                        }
-                    break;
-                }
-            } );
-        
-                  
+                        };
+                        getComment();                     
+                    }
+                break;
+            }
+        } );        
     }
 
     if ( is_post() ) {
