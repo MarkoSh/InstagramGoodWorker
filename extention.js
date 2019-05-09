@@ -54,17 +54,17 @@ let RELIKE_INTERVAL = {
         }
 
         let container = dom.createElement( 'div' );
-            container.setAttribute( 'style', `
+        container.setAttribute( 'style', `
             position: fixed;
             top: 100px;
             right: 100px;
             ` );
-            body.appendChild( container );
+        body.appendChild( container );
     
-            let like_btn = dom.createElement( 'a' );
-            container.appendChild( like_btn );
-            like_btn.setAttribute( 'href', '#' );
-            like_btn.setAttribute( 'style', `
+        let like_btn = dom.createElement( 'a' );
+        container.appendChild( like_btn );
+        like_btn.setAttribute( 'href', '#' );
+        like_btn.setAttribute( 'style', `
             width: 24px;
             height: 24px;
             display: block;
@@ -73,7 +73,7 @@ let RELIKE_INTERVAL = {
             margin: 10px;
             ` );
     
-            like_btn.onclick = e => {
+        like_btn.onclick = e => {
                 e.preventDefault();
                 dom.dispatchEvent( new CustomEvent( 'justDoIt', {
                     detail: {
@@ -84,10 +84,10 @@ let RELIKE_INTERVAL = {
                 return true;
             };
     
-            let comment_btn = dom.createElement( 'a' );
-            container.appendChild( comment_btn );
-            comment_btn.setAttribute( 'href', '#' );
-            comment_btn.setAttribute( 'style', `
+        let comment_btn = dom.createElement( 'a' );
+        container.appendChild( comment_btn );
+        comment_btn.setAttribute( 'href', '#' );
+        comment_btn.setAttribute( 'style', `
             width: 24px;
             height: 24px;
             display: block;
@@ -95,7 +95,7 @@ let RELIKE_INTERVAL = {
             background-position: -131px -146px;
             margin: 10px;
             ` );
-            comment_btn.onclick = e => {
+        comment_btn.onclick = e => {
                 e.preventDefault();
                 dom.dispatchEvent( new CustomEvent( 'justDoIt', {
                     detail: {
